@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import { showSuccess, showError } from '$lib/stores/toast.js';
 	
 	let membershipType = 'group_class'; // 'group_class' or 'personal_training'
 	let members = [];
@@ -136,15 +137,16 @@
 			});
 			
 			if (response.ok) {
+				showSuccess(`${membershipType === 'group_class' ? 'Group class' : 'Personal training'} membership created successfully!`);
 				await loadMemberships();
 				resetForm();
 			} else {
 				const error = await response.text();
-				alert(`Error creating membership: ${error}`);
+				showError(`Error creating membership: ${error}`);
 			}
 		} catch (error) {
 			console.error('Failed to create membership:', error);
-			alert('Failed to create membership');
+			showError('Failed to create membership');
 		} finally {
 			isLoading = false;
 		}
@@ -166,14 +168,15 @@
 				});
 				
 				if (response.ok) {
+					showSuccess('Membership deleted successfully!');
 					await loadMemberships();
 				} else {
 					const error = await response.text();
-					alert(`Error deleting membership: ${error}`);
+					showError(`Error deleting membership: ${error}`);
 				}
 			} catch (error) {
 				console.error('Failed to delete membership:', error);
-				alert('Failed to delete membership');
+				showError('Failed to delete membership');
 			}
 		}
 	}

@@ -1,6 +1,7 @@
 <script>
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
+	import { showSuccess, showError } from '$lib/stores/toast.js';
 	
 	export let data;
 	export let form;
@@ -32,8 +33,11 @@
 		return async ({ result }) => {
 			isLoading = false;
 			if (result.type === 'success') {
+				showSuccess(isEditing ? 'Member updated successfully!' : 'Member created successfully!');
 				newMember();
 				await invalidateAll();
+			} else if (result.type === 'failure') {
+				showError(form?.error || 'Failed to save member. Please try again.');
 			}
 		};
 	};
@@ -60,19 +64,6 @@
 		</div>
 	</div>
 
-	{#if form?.error}
-		<div class="alert alert-error animate-slide-up">
-			<span class="alert-icon">❌</span>
-			{form.error}
-		</div>
-	{/if}
-
-	{#if form?.success}
-		<div class="alert alert-success animate-slide-up">
-			<span class="alert-icon">✅</span>
-			Member saved successfully!
-		</div>
-	{/if}
 
 	<div class="members-content">
 		<div class="members-list card animate-slide-up">

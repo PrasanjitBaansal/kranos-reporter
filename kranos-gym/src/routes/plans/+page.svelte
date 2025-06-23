@@ -1,6 +1,7 @@
 <script>
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
+	import { showSuccess, showError } from '$lib/stores/toast.js';
 	
 	export let data;
 	export let form;
@@ -31,8 +32,11 @@
 		return async ({ result }) => {
 			isLoading = false;
 			if (result.type === 'success') {
+				showSuccess(isEditing ? 'Plan updated successfully!' : 'Plan created successfully!');
 				newPlan();
 				await invalidateAll();
+			} else if (result.type === 'failure') {
+				showError(form?.error || 'Failed to save plan. Please try again.');
 			}
 		};
 	};
@@ -63,19 +67,6 @@
 		</div>
 	</div>
 
-	{#if form?.error}
-		<div class="alert alert-error animate-slide-up">
-			<span class="alert-icon">❌</span>
-			{form.error}
-		</div>
-	{/if}
-
-	{#if form?.success}
-		<div class="alert alert-success animate-slide-up">
-			<span class="alert-icon">✅</span>
-			Plan saved successfully!
-		</div>
-	{/if}
 
 	<div class="plans-content">
 		<div class="plans-list card animate-slide-up">
