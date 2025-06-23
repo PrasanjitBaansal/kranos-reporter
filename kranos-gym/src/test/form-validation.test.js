@@ -6,7 +6,6 @@ import { renderComponent, mockFetch } from './utils.js';
 // Import components for form testing
 import MembersPage from '../routes/members/+page.svelte';
 import PlansPage from '../routes/plans/+page.svelte';
-import LoginPage from '../routes/login/+page.svelte';
 
 describe('Form Validation and Submission Tests', () => {
 	const user = userEvent.setup();
@@ -240,114 +239,6 @@ describe('Form Validation and Submission Tests', () => {
 				method: 'POST',
 				body: expect.stringContaining('New Plan')
 			}));
-		});
-	});
-
-	describe('Login Form Validation', () => {
-		it('should validate required fields', async () => {
-			renderComponent(LoginPage, { props: defaultLoginProps });
-			
-			const submitButton = screen.getByRole('button', { name: /sign in/i });
-			await fireEvent.click(submitButton);
-			
-			await waitFor(() => {
-				expect(screen.getByText('Please enter both username and password')).toBeInTheDocument();
-			});
-		});
-
-		it('should validate empty username', async () => {
-			renderComponent(LoginPage, { props: defaultLoginProps });
-			
-			await user.type(screen.getByLabelText('Password'), 'password123');
-			
-			const submitButton = screen.getByRole('button', { name: /sign in/i });
-			await fireEvent.click(submitButton);
-			
-			await waitFor(() => {
-				expect(screen.getByText('Please enter both username and password')).toBeInTheDocument();
-			});
-		});
-
-		it('should validate empty password', async () => {
-			renderComponent(LoginPage, { props: defaultLoginProps });
-			
-			await user.type(screen.getByLabelText('Username'), 'admin');
-			
-			const submitButton = screen.getByRole('button', { name: /sign in/i });
-			await fireEvent.click(submitButton);
-			
-			await waitFor(() => {
-				expect(screen.getByText('Please enter both username and password')).toBeInTheDocument();
-			});
-		});
-
-		it('should submit with valid credentials', async () => {
-			mockFetch({
-				'/api/auth/login': {
-					ok: true,
-					json: async () => ({ success: true })
-				}
-			});
-
-			// Mock navigation
-			const mockGoto = vi.fn();
-			vi.doMock('$app/navigation', () => ({
-				goto: mockGoto
-			}));
-
-			renderComponent(LoginPage, { props: defaultLoginProps });
-			
-			await user.type(screen.getByLabelText('Username'), 'admin');
-			await user.type(screen.getByLabelText('Password'), 'password123');
-			
-			const submitButton = screen.getByRole('button', { name: /sign in/i });
-			await fireEvent.click(submitButton);
-			
-			expect(fetch).toHaveBeenCalledWith('/api/auth/login', expect.objectContaining({
-				method: 'POST',
-				body: JSON.stringify({
-					username: 'admin',
-					password: 'password123'
-				})
-			}));
-		});
-
-		it('should handle login errors', async () => {
-			mockFetch({
-				'/api/auth/login': {
-					ok: false,
-					status: 401,
-					json: async () => ({ message: 'Invalid credentials' }),
-					text: async () => 'Invalid credentials'
-				}
-			});
-
-			renderComponent(LoginPage, { props: defaultLoginProps });
-			
-			await user.type(screen.getByLabelText('Username'), 'admin');
-			await user.type(screen.getByLabelText('Password'), 'wrongpassword');
-			
-			const submitButton = screen.getByRole('button', { name: /sign in/i });
-			await fireEvent.click(submitButton);
-			
-			await waitFor(() => {
-				expect(screen.getByText('Invalid credentials')).toBeInTheDocument();
-			});
-		});
-
-		it('should toggle password visibility', async () => {
-			renderComponent(LoginPage, { props: defaultLoginProps });
-			
-			const passwordInput = screen.getByLabelText('Password');
-			const toggleButton = document.querySelector('.password-toggle');
-			
-			expect(passwordInput).toHaveAttribute('type', 'password');
-			
-			await fireEvent.click(toggleButton);
-			expect(passwordInput).toHaveAttribute('type', 'text');
-			
-			await fireEvent.click(toggleButton);
-			expect(passwordInput).toHaveAttribute('type', 'password');
 		});
 	});
 

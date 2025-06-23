@@ -1,96 +1,13 @@
 <script>
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
-	import { browser } from '$app/environment';
-	import { goto } from '$app/navigation';
 	
 	let isMenuOpen = false;
-	let isAuthenticated = false;
-	let isLoading = true;
 	
 	onMount(async () => {
 		// Add smooth scrolling behavior
 		document.documentElement.style.scrollBehavior = 'smooth';
-		
-		// Check authentication on page load
-		await checkAuth();
 	});
-	
-	async function checkAuth() {
-		if (!browser) return;
-		
-		try {
-			const sessionToken = localStorage.getItem('sessionToken');
-			if (!sessionToken) {
-				isAuthenticated = false;
-				isLoading = false;
-				if ($page.url.pathname !== '/login') {
-					goto('/login');
-				}
-				return;
-			}
-			
-			// Validate session with server
-			const response = await fetch('/api/auth/validate', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': sessionToken
-				}
-			});
-			
-			if (response.ok) {
-				const result = await response.json();
-				if (result.valid) {
-					isAuthenticated = true;
-					if ($page.url.pathname === '/login') {
-						goto('/');
-					}
-				} else {
-					localStorage.removeItem('sessionToken');
-					isAuthenticated = false;
-					if ($page.url.pathname !== '/login') {
-						goto('/login');
-					}
-				}
-			} else {
-				localStorage.removeItem('sessionToken');
-				isAuthenticated = false;
-				if ($page.url.pathname !== '/login') {
-					goto('/login');
-				}
-			}
-		} catch (error) {
-			console.error('Auth check failed:', error);
-			isAuthenticated = false;
-			if ($page.url.pathname !== '/login') {
-				goto('/login');
-			}
-		} finally {
-			isLoading = false;
-		}
-	}
-	
-	async function logout() {
-		try {
-			const sessionToken = localStorage.getItem('sessionToken');
-			if (sessionToken) {
-				await fetch('/api/auth/logout', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'Authorization': sessionToken
-					}
-				});
-			}
-		} catch (error) {
-			console.error('Logout error:', error);
-		} finally {
-			localStorage.removeItem('sessionToken');
-			isAuthenticated = false;
-			goto('/login');
-		}
-	}
 	
 	const navItems = [
 		{ path: '/', label: 'Dashboard', icon: '📊' },
@@ -121,46 +38,24 @@
 			</div>
 			
 			<div class="nav-menu" class:active={isMenuOpen}>
-				{#if isAuthenticated}
-					{#each navItems as item}
-						<a 
-							href={item.path} 
-							class="nav-link" 
-							class:active={$page.url.pathname === item.path}
-							on:click={() => isMenuOpen = false}
-							aria-label="Navigate to {item.label}"
-						>
-							<span class="nav-icon">{item.icon}</span>
-							<span class="nav-label">{item.label}</span>
-						</a>
-					{/each}
-					<button 
-						class="nav-link logout-btn" 
-						on:click={logout}
-						aria-label="Logout from application"
+				{#each navItems as item}
+					<a 
+						href={item.path} 
+						class="nav-link" 
+						class:active={$page.url.pathname === item.path}
+						on:click={() => isMenuOpen = false}
+						aria-label="Navigate to {item.label}"
 					>
-						<span class="nav-icon">🚪</span>
-						<span class="nav-label">Logout</span>
-					</button>
-				{/if}
+						<span class="nav-icon">{item.icon}</span>
+						<span class="nav-label">{item.label}</span>
+					</a>
+				{/each}
 			</div>
 		</div>
 	</nav>
 	
 	<main class="main-content">
-		{#if isLoading}
-			<div class="loading-container">
-				<div class="loading-spinner"></div>
-				<p>Loading...</p>
-			</div>
-		{:else if isAuthenticated || $page.url.pathname === '/login'}
-			<slot />
-		{:else}
-			<div class="auth-required">
-				<h2>Authentication Required</h2>
-				<p>Please log in to access this page.</p>
-			</div>
-		{/if}
+		<slot />
 	</main>
 </div>
 
@@ -415,51 +310,6 @@
 		font-size: 0.9rem;
 	}
 	
-	.logout-btn {
-		background: none;
-		border: none;
-		cursor: pointer;
-		font-size: 0.9rem;
-		color: var(--text-muted);
-	}
-	
-	.logout-btn:hover {
-		color: var(--error);
-	}
-	
-	.loading-container {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		min-height: 60vh;
-		color: var(--text-muted);
-	}
-	
-	.loading-spinner {
-		width: 40px;
-		height: 40px;
-		border: 3px solid var(--border);
-		border-top: 3px solid var(--primary);
-		border-radius: 50%;
-		animation: spin 1s linear infinite;
-		margin-bottom: 1rem;
-	}
-	
-	@keyframes spin {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
-	}
-	
-	.auth-required {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		min-height: 60vh;
-		text-align: center;
-		color: var(--text-muted);
-	}
 	
 	.main-content {
 		flex: 1;

@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/svelte/svelte5';
 import userEvent from '@testing-library/user-event';
-import { renderComponent, mockFetch, mockData } from '../../test/utils.js';
-import ReportingPage from './+page.svelte';
+import { renderComponent, mockFetch, mockData } from '../utils.js';
+import ReportingPage from '../../routes/reporting/+page.svelte';
 
 describe('Reporting Page Component', () => {
 	const user = userEvent.setup();
