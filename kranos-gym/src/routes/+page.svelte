@@ -74,7 +74,7 @@
 					.map(pt => ({
 						type: 'pt_booking',
 						name: pt.member_name,
-						amount: `$${pt.amount_paid}`,
+						amount: formatCurrency(pt.amount_paid),
 						timestamp: formatTimestamp(pt.purchase_date),
 						icon: '🎯'
 					}))

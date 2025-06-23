@@ -4,6 +4,30 @@ All notable changes to the Kranos Gym Management System will be documented in th
 
 ## [Unreleased]
 
+## [1.0.6] - 2025-06-23 - 💱 Currency Localization to Indian Rupee
+
+### 🌏 Currency Symbol Update
+- **Complete Currency Migration**: Replaced all USD dollar symbols ($) with Indian Rupee symbols (₹) throughout the application
+- **UI Components**: Updated all Svelte components to display ₹ instead of $ for currency amounts
+- **Currency Formatting**: Changed `Intl.NumberFormat` locale from 'en-US' to 'en-IN' and currency from 'USD' to 'INR'
+- **Form Labels**: Updated form input labels from "Amount ($)" to "Amount (₹)"
+- **Test Updates**: Modified all test assertions to expect ₹ symbols instead of $ symbols
+
+### 🔧 Technical Changes
+- **Modified Files**:
+  - `src/routes/memberships/+page.svelte` - Updated formatCurrency function and input prefixes
+  - `src/routes/plans/+page.svelte` - Changed amount display and form labels
+  - `src/routes/reporting/+page.svelte` - Updated currency formatting function
+  - `src/routes/+page.svelte` - Fixed hardcoded currency display in PT membership activities
+  - `tests/e2e/complete-user-journey.spec.js` - Updated test expectations for ₹ symbols
+  - `src/test/routes/+page.test.js` - Modified test assertions for Indian Rupee format
+
+### 🎯 Impact
+- All currency amounts now display with proper Indian Rupee (₹) symbol
+- Currency formatting follows Indian locale standards (₹45,780.00)
+- Consistent currency representation across all components and reports
+- Test suite updated to verify correct currency symbol usage
+
 ## [1.0.5] - 2025-06-23 - 🔧 Dashboard Loading Fix
 
 ### 🐛 Bug Fixes

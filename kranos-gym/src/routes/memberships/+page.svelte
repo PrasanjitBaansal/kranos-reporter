@@ -120,9 +120,9 @@
 	}
 	
 	function formatCurrency(amount) {
-		return new Intl.NumberFormat('en-US', {
+		return new Intl.NumberFormat('en-IN', {
 			style: 'currency',
-			currency: 'USD'
+			currency: 'INR'
 		}).format(amount);
 	}
 	
@@ -322,7 +322,7 @@
 						<div class="form-group">
 							<label for="amount_paid">Amount Paid *</label>
 							<div class="input-group">
-								<span class="input-prefix">$</span>
+								<span class="input-prefix">₹</span>
 								<input 
 									type="number" 
 									id="amount_paid" 
@@ -362,7 +362,7 @@
 						<div class="form-group">
 							<label for="pt_amount_paid">Amount Paid *</label>
 							<div class="input-group">
-								<span class="input-prefix">$</span>
+								<span class="input-prefix">₹</span>
 								<input 
 									type="number" 
 									id="pt_amount_paid" 

@@ -62,7 +62,7 @@ describe('Dashboard Component', () => {
 		await waitFor(() => {
 			expect(screen.getByText('156')).toBeInTheDocument(); // Total Members
 			expect(screen.getByText('142')).toBeInTheDocument(); // Active Members
-			expect(screen.getByText('$45,780.00')).toBeInTheDocument(); // Monthly Revenue
+			expect(screen.getByText('₹45,780.00')).toBeInTheDocument(); // Monthly Revenue
 			expect(screen.getByText('8')).toBeInTheDocument(); // Expiring Soon
 		});
 	});
@@ -129,7 +129,7 @@ describe('Dashboard Component', () => {
 		renderComponent(Dashboard);
 		
 		await waitFor(() => {
-			expect(screen.getByText('$45,780.00')).toBeInTheDocument();
+			expect(screen.getByText('₹45,780.00')).toBeInTheDocument();
 		});
 	});
 

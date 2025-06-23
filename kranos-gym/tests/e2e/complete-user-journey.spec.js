@@ -15,7 +15,7 @@ test.describe('Complete User Journey - Gym Data Management', () => {
 		// 2. Verify dashboard stats are displayed
 		await expect(page.getByText('Total Members')).toBeVisible();
 		await expect(page.getByText('156')).toBeVisible();
-		await expect(page.getByText('$45,780.00')).toBeVisible();
+		await expect(page.getByText('₹45,780.00')).toBeVisible();
 		
 		// 3. Navigate to Members page
 		await page.getByRole('link', { name: /members/i }).click();
@@ -92,7 +92,7 @@ test.describe('Complete User Journey - Gym Data Management', () => {
 		// 16. View financial report
 		await page.getByText('Financial Report').click();
 		await expect(page.getByText('Total Revenue')).toBeVisible();
-		await expect(page.getByText('$45,780')).toBeVisible();
+		await expect(page.getByText('₹45,780')).toBeVisible();
 		
 		// 17. Switch to renewals report
 		await page.getByText('Upcoming Renewals').click();

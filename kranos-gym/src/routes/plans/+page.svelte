@@ -114,7 +114,7 @@
 								</div>
 								<div class="plan-amount">
 									<span class="detail-icon">💰</span>
-									<span>${plan.default_amount}</span>
+									<span>₹{plan.default_amount}</span>
 								</div>
 							</div>
 							<div class="plan-display-name">
@@ -185,7 +185,7 @@
 				</div>
 
 				<div class="form-group">
-					<label for="default_amount" class="form-label">Default Amount ($)</label>
+					<label for="default_amount" class="form-label">Default Amount (₹)</label>
 					<input
 						type="number"
 						id="default_amount"
