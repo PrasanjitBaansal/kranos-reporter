@@ -4,6 +4,23 @@ All notable changes to the Kranos Gym Management System will be documented in th
 
 ## [Unreleased]
 
+## [1.0.5] - 2025-06-23 - 🔧 Dashboard Loading Fix
+
+### 🐛 Bug Fixes
+- **Dashboard Loading Issue**: Fixed dashboard stuck on loading spinner due to database connection race condition
+- **Database Connection Management**: Resolved "Database handle is closed" error in dashboard data loading
+- **Query Execution Order**: Changed parallel database queries to sequential execution to prevent connection conflicts
+
+### 🔧 Technical Changes
+- **Modified**: `src/routes/+page.server.js` - Changed `Promise.all()` to sequential query execution
+- **Enhanced**: Error handling for database connection closing with proper try-catch blocks
+- **Improved**: Database connection stability for dashboard data loading
+
+### 📊 Impact
+- Dashboard now loads successfully without getting stuck on loading spinner
+- Resolved HTTP 200 response issues and eliminated database connection errors
+- Improved user experience with proper dashboard data display
+
 ## [1.0.4] - 2025-06-23 - 🔓 Remove Authentication System
 
 ### 🚨 BREAKING CHANGES

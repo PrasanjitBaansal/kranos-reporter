@@ -5,12 +5,11 @@ export const load = async () => {
     try {
         await db.connect();
         
-        const [members, groupPlans, groupClassMemberships, ptMemberships] = await Promise.all([
-            db.getMembers(true),
-            db.getGroupPlans(true), 
-            db.getGroupClassMemberships(true),
-            db.getPTMemberships()
-        ]);
+        // Run queries sequentially to avoid connection issues
+        const members = await db.getMembers(true);
+        const groupPlans = await db.getGroupPlans(true);
+        const groupClassMemberships = await db.getGroupClassMemberships(true);
+        const ptMemberships = await db.getPTMemberships();
 
         return {
             members,
@@ -27,7 +26,11 @@ export const load = async () => {
             ptMemberships: []
         };
     } finally {
-        await db.close();
+        try {
+            await db.close();
+        } catch (closeError) {
+            console.error('Error closing database:', closeError);
+        }
     }
 };
 
