@@ -58,10 +58,14 @@ export const actions = {
                 amount_paid: parseFloat(data.get('amount_paid')),
                 purchase_date: data.get('purchase_date') || new Date().toISOString().split('T')[0],
                 membership_type: membershipType,
-                is_active: true
+                status: 'Active'
             };
 
             const result = await db.createGroupClassMembership(membership);
+            
+            // Update member status based on new membership
+            await db.updateMemberStatus(membership.member_id);
+            
             return { success: true, membership: result, type: 'gc' };
         } catch (error) {
             return { success: false, error: error.message, type: 'gc' };
@@ -86,10 +90,14 @@ export const actions = {
                 amount_paid: parseFloat(data.get('amount_paid')),
                 purchase_date: data.get('purchase_date'),
                 membership_type: data.get('membership_type'),
-                is_active: data.get('is_active') !== 'false'
+                status: data.get('status') || 'Active'
             };
 
             await db.updateGroupClassMembership(id, membership);
+            
+            // Update member status based on updated membership
+            await db.updateMemberStatus(membership.member_id);
+            
             return { success: true, type: 'gc' };
         } catch (error) {
             return { success: false, error: error.message, type: 'gc' };

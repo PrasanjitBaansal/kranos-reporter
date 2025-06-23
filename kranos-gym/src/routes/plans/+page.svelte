@@ -103,8 +103,10 @@
 						>
 							<div class="plan-header">
 								<h3 class="plan-name">{plan.name}</h3>
-								{#if !plan.is_active}
+								{#if plan.status === 'Inactive'}
 									<span class="status-badge inactive">Inactive</span>
+								{:else if plan.status === 'Deleted'}
+									<span class="status-badge deleted">Deleted</span>
 								{/if}
 							</div>
 							<div class="plan-details">
@@ -212,15 +214,17 @@
 				</div>
 
 				<div class="form-group">
-					<label class="checkbox-label">
-						<input
-							type="checkbox"
-							name="is_active"
-							checked={selectedPlan?.is_active !== false}
-							class="form-checkbox"
-						/>
-						<span class="checkbox-text">Active Plan</span>
-					</label>
+					<label for="status" class="form-label">Status</label>
+					<select
+						id="status"
+						name="status"
+						value={selectedPlan?.status || 'Active'}
+						class="form-control"
+					>
+						<option value="Active">Active</option>
+						<option value="Inactive">Inactive</option>
+						<option value="Deleted">Deleted</option>
+					</select>
 				</div>
 
 				<div class="form-actions">
@@ -480,6 +484,12 @@
 		background: rgba(239, 68, 68, 0.2);
 		color: var(--error);
 		border: 1px solid var(--error);
+	}
+
+	.status-badge.deleted {
+		background: rgba(156, 163, 175, 0.2);
+		color: #9CA3AF;
+		border: 1px solid #9CA3AF;
 	}
 
 	.plan-details {

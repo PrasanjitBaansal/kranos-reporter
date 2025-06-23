@@ -6,7 +6,7 @@ CREATE TABLE members (
     phone TEXT NOT NULL UNIQUE,
     email TEXT,
     join_date TEXT,
-    is_active BOOLEAN NOT NULL DEFAULT 1
+    status TEXT NOT NULL DEFAULT 'Active' CHECK (status IN ('Active', 'Inactive', 'Deleted'))
 );
 
 CREATE TABLE group_plans (
@@ -15,7 +15,7 @@ CREATE TABLE group_plans (
     duration_days INTEGER NOT NULL,
     default_amount REAL NOT NULL,
     display_name TEXT UNIQUE,
-    is_active BOOLEAN NOT NULL DEFAULT 1
+    status TEXT NOT NULL DEFAULT 'Active' CHECK (status IN ('Active', 'Inactive', 'Deleted'))
 );
 
 CREATE TABLE group_class_memberships (
@@ -27,7 +27,7 @@ CREATE TABLE group_class_memberships (
     amount_paid REAL,
     purchase_date TEXT,
     membership_type TEXT,
-    is_active BOOLEAN NOT NULL DEFAULT 1,
+    status TEXT NOT NULL DEFAULT 'Active' CHECK (status IN ('Active', 'Inactive', 'Deleted')),
     FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,
     FOREIGN KEY (plan_id) REFERENCES group_plans(id) ON DELETE RESTRICT,
     UNIQUE (member_id, plan_id, start_date)

@@ -44,7 +44,7 @@ export const actions = {
             phone: data.get('phone'),
             email: data.get('email') || null,
             join_date: data.get('join_date') || new Date().toISOString().split('T')[0],
-            is_active: data.get('is_active') === 'true'
+            status: data.get('status') || 'Inactive'
         };
 
         try {
@@ -67,7 +67,7 @@ export const actions = {
             phone: data.get('phone'),
             email: data.get('email') || null,
             join_date: data.get('join_date'),
-            is_active: data.get('is_active') === 'true'
+            status: data.get('status') || 'Inactive'
         };
 
         try {
@@ -106,7 +106,7 @@ export const actions = {
             duration_days: parseInt(data.get('duration_days')),
             default_amount: parseFloat(data.get('default_amount')),
             display_name: data.get('display_name'),
-            is_active: data.get('is_active') === 'true'
+            status: data.get('status') || 'Active'
         };
 
         try {
@@ -129,7 +129,7 @@ export const actions = {
             duration_days: parseInt(data.get('duration_days')),
             default_amount: parseFloat(data.get('default_amount')),
             display_name: data.get('display_name'),
-            is_active: data.get('is_active') === 'true'
+            status: data.get('status') || 'Active'
         };
 
         try {
@@ -171,7 +171,7 @@ export const actions = {
             amount_paid: parseFloat(data.get('amount_paid')),
             purchase_date: data.get('purchase_date') || new Date().toISOString().split('T')[0],
             membership_type: data.get('membership_type') || 'New',
-            is_active: data.get('is_active') === 'true'
+            status: data.get('status') || 'Active'
         };
 
         try {
@@ -197,7 +197,7 @@ export const actions = {
             amount_paid: parseFloat(data.get('amount_paid')),
             purchase_date: data.get('purchase_date'),
             membership_type: data.get('membership_type'),
-            is_active: data.get('is_active') === 'true'
+            status: data.get('status') || 'Active'
         };
 
         try {

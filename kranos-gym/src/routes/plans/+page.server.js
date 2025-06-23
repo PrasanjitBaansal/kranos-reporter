@@ -23,7 +23,7 @@ export const actions = {
             duration_days: parseInt(data.get('duration_days')),
             default_amount: parseFloat(data.get('default_amount')),
             display_name: data.get('display_name') || `${data.get('name')} - ${data.get('duration_days')} days`,
-            is_active: data.get('is_active') !== 'false'
+            status: data.get('status') || 'Active'
         };
 
         try {
@@ -46,7 +46,7 @@ export const actions = {
             duration_days: parseInt(data.get('duration_days')),
             default_amount: parseFloat(data.get('default_amount')),
             display_name: data.get('display_name'),
-            is_active: data.get('is_active') !== 'false'
+            status: data.get('status') || 'Active'
         };
 
         try {

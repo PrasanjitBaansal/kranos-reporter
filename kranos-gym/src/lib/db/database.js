@@ -69,19 +69,52 @@ class Database {
     // Members CRUD Operations
     async getMembers(activeOnly = false) {
         await this.ensureConnection();
-        const query = activeOnly ? 
-            'SELECT * FROM members WHERE is_active = 1 ORDER BY name' :
-            'SELECT * FROM members ORDER BY name';
         
-        return new Promise((resolve, reject) => {
-            this.db.all(query, [], (err, rows) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(rows);
-                }
+        if (activeOnly) {
+            // Get members with active memberships (current date between start_date and end_date)
+            const query = `
+                SELECT DISTINCT m.*, 
+                       CASE 
+                           WHEN EXISTS(
+                               SELECT 1 FROM group_class_memberships gcm 
+                               WHERE gcm.member_id = m.id 
+                               AND gcm.status = 'Active'
+                               AND DATE('now') BETWEEN gcm.start_date AND gcm.end_date
+                           ) THEN 'Active'
+                           WHEN EXISTS(
+                               SELECT 1 FROM group_class_memberships gcm 
+                               WHERE gcm.member_id = m.id 
+                               AND gcm.status != 'Deleted'
+                           ) THEN 'Inactive'
+                           ELSE 'Inactive'
+                       END as calculated_status
+                FROM members m
+                WHERE m.status != 'Deleted'
+                HAVING calculated_status = 'Active'
+                ORDER BY m.name`;
+            
+            return new Promise((resolve, reject) => {
+                this.db.all(query, [], (err, rows) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(rows);
+                    }
+                });
             });
-        });
+        } else {
+            const query = 'SELECT * FROM members WHERE status != \'Deleted\' ORDER BY name';
+            
+            return new Promise((resolve, reject) => {
+                this.db.all(query, [], (err, rows) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(rows);
+                    }
+                });
+            });
+        }
     }
 
     async getMemberById(id) {
@@ -112,11 +145,11 @@ class Database {
 
     async createMember(member) {
         await this.ensureConnection();
-        const { name, phone, email, join_date, is_active = 1 } = member;
+        const { name, phone, email, join_date, status = 'Inactive' } = member;
         return new Promise((resolve, reject) => {
             this.db.run(
-                'INSERT INTO members (name, phone, email, join_date, is_active) VALUES (?, ?, ?, ?, ?)',
-                [name, phone, email, join_date, is_active],
+                'INSERT INTO members (name, phone, email, join_date, status) VALUES (?, ?, ?, ?, ?)',
+                [name, phone, email, join_date, status],
                 function(err) {
                     if (err) {
                         reject(err);
@@ -130,11 +163,11 @@ class Database {
 
     async updateMember(id, member) {
         await this.ensureConnection();
-        const { name, phone, email, join_date, is_active } = member;
+        const { name, phone, email, join_date, status } = member;
         return new Promise((resolve, reject) => {
             this.db.run(
-                'UPDATE members SET name = ?, phone = ?, email = ?, join_date = ?, is_active = ? WHERE id = ?',
-                [name, phone, email, join_date, is_active, id],
+                'UPDATE members SET name = ?, phone = ?, email = ?, join_date = ?, status = ? WHERE id = ?',
+                [name, phone, email, join_date, status, id],
                 function(err) {
                     if (err) {
                         reject(err);
@@ -148,8 +181,9 @@ class Database {
 
     async deleteMember(id) {
         await this.ensureConnection();
+        // Soft delete: set status to 'Deleted' instead of removing the record
         return new Promise((resolve, reject) => {
-            this.db.run('DELETE FROM members WHERE id = ?', [id], function(err) {
+            this.db.run('UPDATE members SET status = \'Deleted\' WHERE id = ?', [id], function(err) {
                 if (err) {
                     reject(err);
                 } else {
@@ -163,8 +197,8 @@ class Database {
     async getGroupPlans(activeOnly = false) {
         await this.ensureConnection();
         const query = activeOnly ? 
-            'SELECT * FROM group_plans WHERE is_active = 1 ORDER BY name' :
-            'SELECT * FROM group_plans ORDER BY name';
+            'SELECT * FROM group_plans WHERE status = \'Active\' ORDER BY name' :
+            'SELECT * FROM group_plans WHERE status != \'Deleted\' ORDER BY name';
         
         return new Promise((resolve, reject) => {
             this.db.all(query, [], (err, rows) => {
@@ -192,11 +226,11 @@ class Database {
 
     async createGroupPlan(plan) {
         await this.ensureConnection();
-        const { name, duration_days, default_amount, display_name, is_active = 1 } = plan;
+        const { name, duration_days, default_amount, display_name, status = 'Active' } = plan;
         return new Promise((resolve, reject) => {
             this.db.run(
-                'INSERT INTO group_plans (name, duration_days, default_amount, display_name, is_active) VALUES (?, ?, ?, ?, ?)',
-                [name, duration_days, default_amount, display_name, is_active],
+                'INSERT INTO group_plans (name, duration_days, default_amount, display_name, status) VALUES (?, ?, ?, ?, ?)',
+                [name, duration_days, default_amount, display_name, status],
                 function(err) {
                     if (err) {
                         reject(err);
@@ -210,11 +244,11 @@ class Database {
 
     async updateGroupPlan(id, plan) {
         await this.ensureConnection();
-        const { name, duration_days, default_amount, display_name, is_active } = plan;
+        const { name, duration_days, default_amount, display_name, status } = plan;
         return new Promise((resolve, reject) => {
             this.db.run(
-                'UPDATE group_plans SET name = ?, duration_days = ?, default_amount = ?, display_name = ?, is_active = ? WHERE id = ?',
-                [name, duration_days, default_amount, display_name, is_active, id],
+                'UPDATE group_plans SET name = ?, duration_days = ?, default_amount = ?, display_name = ?, status = ? WHERE id = ?',
+                [name, duration_days, default_amount, display_name, status, id],
                 function(err) {
                     if (err) {
                         reject(err);
@@ -228,8 +262,9 @@ class Database {
 
     async deleteGroupPlan(id) {
         await this.ensureConnection();
+        // Soft delete: set status to 'Deleted' instead of removing the record
         return new Promise((resolve, reject) => {
-            this.db.run('DELETE FROM group_plans WHERE id = ?', [id], function(err) {
+            this.db.run('UPDATE group_plans SET status = \'Deleted\' WHERE id = ?', [id], function(err) {
                 if (err) {
                     reject(err);
                 } else {
@@ -247,12 +282,13 @@ class Database {
              FROM group_class_memberships gcm
              JOIN members m ON gcm.member_id = m.id
              JOIN group_plans gp ON gcm.plan_id = gp.id
-             WHERE gcm.is_active = 1
+             WHERE gcm.status = 'Active' AND DATE('now') BETWEEN gcm.start_date AND gcm.end_date
              ORDER BY gcm.start_date DESC` :
             `SELECT gcm.*, m.name as member_name, m.phone as member_phone, gp.display_name as plan_name
              FROM group_class_memberships gcm
              JOIN members m ON gcm.member_id = m.id
              JOIN group_plans gp ON gcm.plan_id = gp.id
+             WHERE gcm.status != 'Deleted'
              ORDER BY gcm.start_date DESC`;
         
         return new Promise((resolve, reject) => {
@@ -310,11 +346,11 @@ class Database {
 
     async createGroupClassMembership(membership) {
         await this.ensureConnection();
-        const { member_id, plan_id, start_date, end_date, amount_paid, purchase_date, membership_type, is_active = 1 } = membership;
+        const { member_id, plan_id, start_date, end_date, amount_paid, purchase_date, membership_type, status = 'Active' } = membership;
         return new Promise((resolve, reject) => {
             this.db.run(
-                'INSERT INTO group_class_memberships (member_id, plan_id, start_date, end_date, amount_paid, purchase_date, membership_type, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                [member_id, plan_id, start_date, end_date, amount_paid, purchase_date, membership_type, is_active],
+                'INSERT INTO group_class_memberships (member_id, plan_id, start_date, end_date, amount_paid, purchase_date, membership_type, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                [member_id, plan_id, start_date, end_date, amount_paid, purchase_date, membership_type, status],
                 function(err) {
                     if (err) {
                         reject(err);
@@ -328,11 +364,11 @@ class Database {
 
     async updateGroupClassMembership(id, membership) {
         await this.ensureConnection();
-        const { member_id, plan_id, start_date, end_date, amount_paid, purchase_date, membership_type, is_active } = membership;
+        const { member_id, plan_id, start_date, end_date, amount_paid, purchase_date, membership_type, status } = membership;
         return new Promise((resolve, reject) => {
             this.db.run(
-                'UPDATE group_class_memberships SET member_id = ?, plan_id = ?, start_date = ?, end_date = ?, amount_paid = ?, purchase_date = ?, membership_type = ?, is_active = ? WHERE id = ?',
-                [member_id, plan_id, start_date, end_date, amount_paid, purchase_date, membership_type, is_active, id],
+                'UPDATE group_class_memberships SET member_id = ?, plan_id = ?, start_date = ?, end_date = ?, amount_paid = ?, purchase_date = ?, membership_type = ?, status = ? WHERE id = ?',
+                [member_id, plan_id, start_date, end_date, amount_paid, purchase_date, membership_type, status, id],
                 function(err) {
                     if (err) {
                         reject(err);
@@ -346,8 +382,9 @@ class Database {
 
     async deleteGroupClassMembership(id) {
         await this.ensureConnection();
+        // Soft delete: set status to 'Deleted' instead of removing the record
         return new Promise((resolve, reject) => {
-            this.db.run('DELETE FROM group_class_memberships WHERE id = ?', [id], function(err) {
+            this.db.run('UPDATE group_class_memberships SET status = \'Deleted\' WHERE id = ?', [id], function(err) {
                 if (err) {
                     reject(err);
                 } else {
@@ -464,6 +501,69 @@ class Database {
         });
     }
 
+    // Member Status Management
+    async updateMemberStatus(memberId) {
+        await this.ensureConnection();
+        
+        return new Promise((resolve, reject) => {
+            // Check if member has any active memberships (current date between start_date and end_date)
+            const checkQuery = `
+                SELECT COUNT(*) as active_count
+                FROM group_class_memberships gcm
+                WHERE gcm.member_id = ? 
+                AND gcm.status = 'Active'
+                AND DATE('now') BETWEEN gcm.start_date AND gcm.end_date
+            `;
+            
+            this.db.get(checkQuery, [memberId], (err, result) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                
+                const newStatus = result.active_count > 0 ? 'Active' : 'Inactive';
+                
+                // Update member status
+                this.db.run(
+                    'UPDATE members SET status = ? WHERE id = ? AND status != \\'Deleted\\'',
+                    [newStatus, memberId],
+                    function(updateErr) {
+                        if (updateErr) {
+                            reject(updateErr);
+                        } else {
+                            resolve({ memberId, status: newStatus, changes: this.changes });
+                        }
+                    }
+                );
+            });
+        });
+    }
+
+    async updateAllMemberStatuses() {
+        await this.ensureConnection();
+        
+        return new Promise((resolve, reject) => {
+            // Get all non-deleted members
+            this.db.all('SELECT id FROM members WHERE status != \\'Deleted\\'', [], async (err, members) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                
+                try {
+                    const updates = [];
+                    for (const member of members) {
+                        const result = await this.updateMemberStatus(member.id);
+                        updates.push(result);
+                    }
+                    resolve(updates);
+                } catch (updateError) {
+                    reject(updateError);
+                }
+            });
+        });
+    }
+
     // Reporting Functions
     async getFinancialReport(startDate, endDate) {
         await this.ensureConnection();
@@ -507,7 +607,7 @@ class Database {
                  FROM group_class_memberships gcm
                  JOIN members m ON gcm.member_id = m.id
                  JOIN group_plans gp ON gcm.plan_id = gp.id
-                 WHERE gcm.end_date BETWEEN ? AND ? AND gcm.is_active = 1
+                 WHERE gcm.end_date BETWEEN ? AND ? AND gcm.status = 'Active'
                  ORDER BY gcm.end_date ASC`,
                 [todayStr, futureDateStr],
                 (err, rows) => {

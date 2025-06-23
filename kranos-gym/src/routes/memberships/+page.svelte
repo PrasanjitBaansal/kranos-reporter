@@ -202,8 +202,11 @@
 							{/if}
 						</div>
 						<div class="membership-actions">
-							<span class="status" class:active={membership.is_active} class:inactive={!membership.is_active}>
-								{membership.is_active ? 'Active' : 'Inactive'}
+							<span class="status" 
+								class:active={membership.status === 'Active'} 
+								class:inactive={membership.status === 'Inactive'}
+								class:deleted={membership.status === 'Deleted'}>
+								{membership.status || 'Active'}
 							</span>
 							<button class="btn btn-danger" on:click={() => deleteMembership(membership, membershipType)}>
 								<span>🗑️</span>
@@ -252,7 +255,7 @@
 						Select Member
 					</h3>
 					<div class="member-grid">
-						{#each members.filter(m => m.is_active) as member}
+						{#each members.filter(m => m.status === 'Active') as member}
 							<button
 								type="button"
 								class="member-card"
@@ -279,7 +282,7 @@
 							Select Plan
 						</h3>
 						<div class="plan-grid">
-							{#each plans.filter(p => p.is_active) as plan}
+							{#each plans.filter(p => p.status === 'Active') as plan}
 								<button
 									type="button"
 									class="plan-card"
@@ -686,6 +689,12 @@
 		color: var(--error);
 		border: 1px solid var(--error);
 		box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+	}
+
+	.status.deleted {
+		color: #9CA3AF;
+		border: 1px solid #9CA3AF;
+		box-shadow: 0 0 10px rgba(156, 163, 175, 0.3);
 	}
 	
 	.empty-state {

@@ -4,6 +4,45 @@ All notable changes to the Kranos Gym Management System will be documented in th
 
 ## [Unreleased]
 
+## [1.0.5] - 2025-06-23 - 🔄 Enhanced Member Status Management
+
+### 🚨 BREAKING CHANGES
+- **Status Field Migration**: Replaced boolean `is_active` field with string-based `status` field supporting 'Active', 'Inactive', 'Deleted' values
+- **Active Member Definition**: Members are now considered active only if they have an active membership (current date between membership start and end dates)
+- **Soft Delete Implementation**: Members, plans, and memberships now use soft delete (status = 'Deleted') to preserve historical data
+
+### 🗄️ Database Schema Updates
+- **Schema Changes**: Updated all tables (`members`, `group_plans`, `group_class_memberships`) to use `status` field with CHECK constraints
+- **Member Status Logic**: Implemented automatic status calculation based on active membership dates
+- **Status Values**: 
+  - `Active`: Member has at least one active membership (current date between start/end dates)
+  - `Inactive`: Member has no active memberships but has expired memberships
+  - `Deleted`: Soft-deleted records to preserve historical data
+
+### 🔧 Backend Implementation
+- **Database Layer**: Updated `database.js` with new status-based filtering and member status calculation methods
+- **Status Calculation**: Added `updateMemberStatus()` and `updateAllMemberStatuses()` methods for automatic status management
+- **Query Updates**: Modified all database queries to use status strings instead of boolean values
+- **Soft Delete**: Implemented soft delete for members, plans, and memberships to maintain data integrity
+
+### 🎨 UI/UX Enhancements
+- **Status Dropdowns**: Replaced boolean checkboxes with proper status select dropdowns (Active/Inactive/Deleted)
+- **Status Badges**: Added visual status indicators with color coding for all status types
+- **Form Updates**: Updated all forms to use new status field with appropriate default values
+- **Filter Logic**: Enhanced filtering to work with new status-based system
+
+### 🔄 Business Logic Improvements
+- **Automatic Status Updates**: Member status automatically updates when memberships are created/modified
+- **Active Membership Tracking**: System now tracks active memberships based on date ranges rather than boolean flags
+- **Data Preservation**: Soft delete ensures no data loss while maintaining clean UI presentation
+- **Status Consistency**: All status checks now use consistent string-based logic across the application
+
+### 📊 Server-Side Updates
+- **Route Actions**: Updated all server actions in `+page.server.js` files to use status field
+- **Form Processing**: Modified form data processing to handle status strings instead of boolean conversion
+- **Status Propagation**: Added automatic member status updates when memberships change
+- **Error Handling**: Enhanced error handling for status-related operations
+
 ## [1.0.4] - 2025-06-23 - 🔓 Remove Authentication System
 
 ### 🚨 BREAKING CHANGES

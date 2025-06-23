@@ -21,7 +21,7 @@
 	async function loadDashboardData() {
 		try {
 			// Calculate stats from actual data
-			const activeMembers = data.members.filter(m => m.is_active).length;
+			const activeMembers = data.members.filter(m => m.status === 'Active').length;
 			const totalMembers = data.members.length;
 			
 			// Calculate monthly revenue from current month memberships
@@ -45,7 +45,7 @@
 			const todayStr = now.toISOString().split('T')[0];
 			
 			const expiringSoon = data.groupClassMemberships
-				.filter(gcm => gcm.end_date && gcm.end_date >= todayStr && gcm.end_date <= thirtyDaysStr && gcm.is_active)
+				.filter(gcm => gcm.end_date && gcm.end_date >= todayStr && gcm.end_date <= thirtyDaysStr && gcm.status === 'Active')
 				.length;
 			
 			stats = {

@@ -23,7 +23,7 @@ export const actions = {
             phone: data.get('phone'),
             email: data.get('email') || null,
             join_date: data.get('join_date') || new Date().toISOString().split('T')[0],
-            is_active: data.get('is_active') !== 'false'
+            status: data.get('status') || 'Inactive'
         };
 
         try {
@@ -53,7 +53,7 @@ export const actions = {
             phone: data.get('phone'),
             email: data.get('email') || null,
             join_date: data.get('join_date'),
-            is_active: data.get('is_active') !== 'false'
+            status: data.get('status') || 'Inactive'
         };
 
         try {
