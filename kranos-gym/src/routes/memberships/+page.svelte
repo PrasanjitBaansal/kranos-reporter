@@ -1,16 +1,21 @@
 <script>
-	import { onMount } from 'svelte';
+	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import { showSuccess, showError } from '$lib/stores/toast.js';
 	
+	export let data;
+	export let form;
+	
 	let membershipType = 'group_class'; // 'group_class' or 'personal_training'
-	let members = [];
-	let plans = [];
-	let groupMemberships = [];
-	let ptMemberships = [];
 	let selectedMember = null;
 	let selectedPlan = null;
 	let isLoading = false;
 	let searchTerm = '';
+	
+	$: members = data.members || [];
+	$: plans = data.groupPlans || [];
+	$: groupMemberships = data.groupClassMemberships || [];
+	$: ptMemberships = data.ptMemberships || [];
 	
 	let gcFormData = {
 		member_id: '',
@@ -34,52 +39,12 @@
 		return memberName.includes(searchLower) || planName.includes(searchLower);
 	});
 	
-	onMount(async () => {
-		await Promise.all([
-			loadMembers(),
-			loadPlans(),
-			loadMemberships()
-		]);
-	});
-	
-	async function loadMembers() {
-		try {
-			const response = await fetch('/api/members');
-			if (response.ok) {
-				members = await response.json();
-			}
-		} catch (error) {
-			console.error('Failed to load members:', error);
-		}
-	}
-	
-	async function loadPlans() {
-		try {
-			const response = await fetch('/api/plans');
-			if (response.ok) {
-				plans = await response.json();
-			}
-		} catch (error) {
-			console.error('Failed to load plans:', error);
-		}
-	}
-	
-	async function loadMemberships() {
-		try {
-			const [gcResponse, ptResponse] = await Promise.all([
-				fetch('/api/memberships/group-class'),
-				fetch('/api/memberships/personal-training')
-			]);
-			
-			if (gcResponse.ok) {
-				groupMemberships = await gcResponse.json();
-			}
-			if (ptResponse.ok) {
-				ptMemberships = await ptResponse.json();
-			}
-		} catch (error) {
-			console.error('Failed to load memberships:', error);
-		}
+	// Handle form results
+	$: if (form?.success) {
+		showSuccess(`${membershipType === 'group_class' ? 'Group class' : 'Personal training'} membership created successfully!`);
+		resetForm();
+	} else if (form?.error) {
+		showError(`Error creating membership: ${form.error}`);
 	}
 	
 	function switchMembershipType(type) {
@@ -119,65 +84,38 @@
 		gcFormData.amount_paid = plan.default_amount;
 	}
 	
-	async function saveMembership() {
+	const submitForm = () => {
 		isLoading = true;
-		try {
-			const endpoint = membershipType === 'group_class' 
-				? '/api/memberships/group-class'
-				: '/api/memberships/personal-training';
-			
-			const data = membershipType === 'group_class' ? gcFormData : ptFormData;
-			
-			const response = await fetch(endpoint, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(data)
-			});
-			
-			if (response.ok) {
-				showSuccess(`${membershipType === 'group_class' ? 'Group class' : 'Personal training'} membership created successfully!`);
-				await loadMemberships();
-				resetForm();
-			} else {
-				const error = await response.text();
-				showError(`Error creating membership: ${error}`);
-			}
-		} catch (error) {
-			console.error('Failed to create membership:', error);
-			showError('Failed to create membership');
-		} finally {
+		return async ({ result }) => {
 			isLoading = false;
-		}
-	}
+			if (result.type === 'success') {
+				showSuccess(`${membershipType === 'group_class' ? 'Group class' : 'Personal training'} membership created successfully!`);
+				resetForm();
+				await invalidateAll();
+			} else if (result.type === 'failure') {
+				showError(form?.error || 'Failed to create membership. Please try again.');
+			}
+		};
+	};
 	
-	async function deleteMembership(membership, type) {
+	function deleteMembership(membership, type) {
 		const confirmText = type === 'group_class' 
 			? `Are you sure you want to delete this group class membership for ${membership.member_name}?`
 			: `Are you sure you want to delete this PT membership for ${membership.member_name}?`;
 			
 		if (confirm(confirmText)) {
-			try {
-				const endpoint = type === 'group_class'
-					? `/api/memberships/group-class/${membership.id}`
-					: `/api/memberships/personal-training/${membership.id}`;
-				
-				const response = await fetch(endpoint, {
-					method: 'DELETE'
-				});
-				
-				if (response.ok) {
-					showSuccess('Membership deleted successfully!');
-					await loadMemberships();
-				} else {
-					const error = await response.text();
-					showError(`Error deleting membership: ${error}`);
-				}
-			} catch (error) {
-				console.error('Failed to delete membership:', error);
-				showError('Failed to delete membership');
-			}
+			const form = document.createElement('form');
+			form.method = 'POST';
+			form.action = type === 'group_class' ? '?/deleteGC' : '?/deletePT';
+			
+			const input = document.createElement('input');
+			input.type = 'hidden';
+			input.name = 'id';
+			input.value = membership.id;
+			form.appendChild(input);
+			
+			document.body.appendChild(form);
+			form.submit();
 		}
 	}
 	
@@ -297,7 +235,17 @@
 				</h2>
 			</div>
 			
-			<form on:submit|preventDefault={saveMembership} class="membership-form-content">
+			<form 
+				method="post" 
+				action={membershipType === 'group_class' ? '?/createGC' : '?/createPT'}
+				use:enhance={submitForm} 
+				class="membership-form-content"
+			>
+				<!-- Hidden form fields for selected member and plan -->
+				<input type="hidden" name="member_id" value={selectedMember?.id || ''} />
+				{#if membershipType === 'group_class'}
+					<input type="hidden" name="plan_id" value={selectedPlan?.id || ''} />
+				{/if}
 				<div class="form-section">
 					<h3>
 						<span class="section-icon">👤</span>
@@ -316,6 +264,10 @@
 									<p>{member.phone}</p>
 								</div>
 							</button>
+						{:else}
+							<div class="empty-state">
+								<p>No active members available. Please add members first.</p>
+							</div>
 						{/each}
 					</div>
 				</div>
@@ -339,6 +291,10 @@
 										<p>{plan.duration_days} days - {formatCurrency(plan.default_amount)}</p>
 									</div>
 								</button>
+							{:else}
+								<div class="empty-state">
+									<p>No active plans available. Please add plans first.</p>
+								</div>
 							{/each}
 						</div>
 					</div>
@@ -356,6 +312,7 @@
 							<input 
 								type="date" 
 								id="start_date" 
+								name="start_date"
 								class="form-control"
 								bind:value={gcFormData.start_date} 
 								required 
@@ -369,6 +326,7 @@
 								<input 
 									type="number" 
 									id="amount_paid" 
+									name="amount_paid"
 									class="form-control"
 									bind:value={gcFormData.amount_paid} 
 									required 
@@ -381,7 +339,7 @@
 						
 						<div class="form-group">
 							<label for="membership_type">Membership Type</label>
-							<select id="membership_type" class="form-control" bind:value={gcFormData.membership_type}>
+							<select id="membership_type" name="membership_type" class="form-control" bind:value={gcFormData.membership_type}>
 								<option value="New">New</option>
 								<option value="Renewal">Renewal</option>
 							</select>
@@ -392,6 +350,7 @@
 							<input 
 								type="number" 
 								id="sessions_total" 
+								name="sessions_total"
 								class="form-control"
 								bind:value={ptFormData.sessions_total} 
 								required 
@@ -407,6 +366,7 @@
 								<input 
 									type="number" 
 									id="pt_amount_paid" 
+									name="amount_paid"
 									class="form-control"
 									bind:value={ptFormData.amount_paid} 
 									required 

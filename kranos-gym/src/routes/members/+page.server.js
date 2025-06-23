@@ -28,6 +28,13 @@ export const actions = {
 
         try {
             await db.connect();
+            
+            // Check for duplicate phone number
+            const existingMember = await db.getMemberByPhone(member.phone);
+            if (existingMember) {
+                return { success: false, error: 'Phone number already exists. Please use a different phone number.' };
+            }
+            
             const result = await db.createMember(member);
             return { success: true, member: result };
         } catch (error) {
@@ -51,6 +58,13 @@ export const actions = {
 
         try {
             await db.connect();
+            
+            // Check for duplicate phone number (excluding current member)
+            const existingMember = await db.getMemberByPhone(member.phone);
+            if (existingMember && existingMember.id !== id) {
+                return { success: false, error: 'Phone number already exists. Please use a different phone number.' };
+            }
+            
             await db.updateMember(id, member);
             return { success: true };
         } catch (error) {
