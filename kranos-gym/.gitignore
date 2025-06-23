@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+.pnpm-debug.log*
+
+# Production builds
+.svelte-kit/
+build/
+dist/
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory
+coverage/
+*.lcov
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+._*
+Thumbs.db
+
+# Cache
+.cache/
+.parcel-cache/
+.npm
+.eslintcache
+
+# Temporary folders
+tmp/
+temp/
+
+# Svelte
+.svelte-kit
+
+# Vite
+vite.config.js.timestamp-*
+EOF < /dev/null
