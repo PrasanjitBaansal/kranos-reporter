@@ -4,6 +4,39 @@ All notable changes to the Kranos Gym Management System will be documented in th
 
 ## [Unreleased]
 
+## [1.0.4] - 2025-06-23 - 🔓 Remove Authentication System
+
+### 🚨 BREAKING CHANGES
+- **Authentication Removed**: Completely removed all authentication functionality from the application
+- **No Login Required**: Application now runs without any authentication checks or login requirements
+- **Direct Access**: All pages and features are directly accessible without authentication
+
+### 🗑️ Removed Components
+- Deleted `src/lib/auth.js` - Complete authentication library
+- Deleted `src/routes/login/+page.svelte` - Login page component
+- Deleted `src/routes/api/auth/` directory - All authentication API endpoints
+  - `login/+server.js` - Login API endpoint
+  - `logout/+server.js` - Logout API endpoint  
+  - `validate/+server.js` - Session validation endpoint
+- Removed `bcryptjs` dependency from package.json
+
+### 🔧 Modified Components
+- **Layout Component (`+layout.svelte`)**:
+  - Removed authentication state management
+  - Removed session validation logic
+  - Removed logout functionality
+  - Removed loading states and auth checks
+  - Navigation now shows all menu items without authentication
+- **Test Files**:
+  - Updated `src/test/utils.js` to remove authentication parameters
+  - Updated `tests/e2e/complete-user-journey.spec.js` to start directly at dashboard
+  - Removed `tests/e2e/login-workflow.spec.js` test file
+
+### ⚠️ Security Notice
+- Application is now completely open without any access controls
+- This is a temporary state - authentication will be re-implemented later
+- All gym management features are publicly accessible
+
 ## [1.0.3] - 2025-06-23 - 🧪 Test Suite Bug Hunt & Fixes
 
 ### 🔧 Major Test Infrastructure Fixes

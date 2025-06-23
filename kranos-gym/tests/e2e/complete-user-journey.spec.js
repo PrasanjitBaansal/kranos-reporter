@@ -1,32 +1,23 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Complete User Journey - From Login to Data Management', () => {
+test.describe('Complete User Journey - Gym Data Management', () => {
 	test.beforeEach(async ({ page }) => {
 		// Mock all necessary API endpoints
 		await setupAPIMocks(page);
 	});
 
 	test('complete gym management workflow', async ({ page }) => {
-		// 1. Start at login page
-		await page.goto('/login');
-		await expect(page).toHaveTitle(/Login - Kranos Gym/);
-		
-		// 2. Login with credentials
-		await page.getByLabel('Username').fill('admin');
-		await page.getByLabel('Password').fill('password123');
-		await page.getByRole('button', { name: /sign in/i }).click();
-		
-		// 3. Should redirect to dashboard
-		await expect(page).toHaveURL('/');
+		// 1. Start at dashboard
+		await page.goto('/');
 		await expect(page.getByText('Dashboard')).toBeVisible();
 		await expect(page.getByText('Welcome back!')).toBeVisible();
 		
-		// 4. Verify dashboard stats are displayed
+		// 2. Verify dashboard stats are displayed
 		await expect(page.getByText('Total Members')).toBeVisible();
 		await expect(page.getByText('156')).toBeVisible();
 		await expect(page.getByText('$45,780.00')).toBeVisible();
 		
-		// 5. Navigate to Members page
+		// 3. Navigate to Members page
 		await page.getByRole('link', { name: /members/i }).click();
 		await expect(page).toHaveURL('/members');
 		await expect(page.getByText('Members')).toBeVisible();

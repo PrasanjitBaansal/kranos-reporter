@@ -5,7 +5,7 @@ import { vi } from 'vitest';
  * Custom render function that provides common testing utilities
  */
 export function renderComponent(Component, options = {}) {
-	const { props = {}, authenticated = true, isLoading = false, ...renderOptions } = options;
+	const { props = {}, ...renderOptions } = options;
 	
 	// Default data structure for components that expect data from server load
 	const defaultData = {
@@ -15,8 +15,6 @@ export function renderComponent(Component, options = {}) {
 		ptMemberships: mockData.ptMemberships
 	};
 	
-	// Mock loading state
-	const loadingState = createMockStore(isLoading);
 	
 	// Merge provided props with defaults
 	const mergedProps = {
