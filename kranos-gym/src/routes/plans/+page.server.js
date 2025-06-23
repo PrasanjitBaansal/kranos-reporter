@@ -1,8 +1,7 @@
 import Database from '../../lib/db/database.js';
 
-const db = new Database();
-
 export const load = async () => {
+    const db = new Database();
     try {
         await db.connect();
         const groupPlans = await db.getGroupPlans();
@@ -17,6 +16,7 @@ export const load = async () => {
 
 export const actions = {
     create: async ({ request }) => {
+        const db = new Database();
         const data = await request.formData();
         const plan = {
             name: data.get('name'),
@@ -38,6 +38,7 @@ export const actions = {
     },
 
     update: async ({ request }) => {
+        const db = new Database();
         const data = await request.formData();
         const id = parseInt(data.get('id'));
         const plan = {
@@ -60,6 +61,7 @@ export const actions = {
     },
 
     delete: async ({ request }) => {
+        const db = new Database();
         const data = await request.formData();
         const id = parseInt(data.get('id'));
 

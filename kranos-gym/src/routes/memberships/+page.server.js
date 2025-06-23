@@ -1,8 +1,7 @@
 import Database from '../../lib/db/database.js';
 
-const db = new Database();
-
 export const load = async () => {
+    const db = new Database();
     try {
         await db.connect();
         
@@ -36,6 +35,7 @@ export const actions = {
     // Group Class Membership actions
     createGC: async ({ request }) => {
         const data = await request.formData();
+        const db = new Database();
         
         try {
             await db.connect();
@@ -73,6 +73,7 @@ export const actions = {
     updateGC: async ({ request }) => {
         const data = await request.formData();
         const id = parseInt(data.get('id'));
+        const db = new Database();
         
         try {
             await db.connect();
@@ -100,6 +101,7 @@ export const actions = {
     deleteGC: async ({ request }) => {
         const data = await request.formData();
         const id = parseInt(data.get('id'));
+        const db = new Database();
 
         try {
             await db.connect();
@@ -116,6 +118,7 @@ export const actions = {
     createPT: async ({ request }) => {
         const data = await request.formData();
         const sessions_total = parseInt(data.get('sessions_total'));
+        const db = new Database();
         
         const membership = {
             member_id: parseInt(data.get('member_id')),
@@ -139,6 +142,7 @@ export const actions = {
     updatePT: async ({ request }) => {
         const data = await request.formData();
         const id = parseInt(data.get('id'));
+        const db = new Database();
         
         const membership = {
             member_id: parseInt(data.get('member_id')),
@@ -162,6 +166,7 @@ export const actions = {
     deletePT: async ({ request }) => {
         const data = await request.formData();
         const id = parseInt(data.get('id'));
+        const db = new Database();
 
         try {
             await db.connect();

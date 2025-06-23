@@ -1,8 +1,7 @@
 import Database from '../../lib/db/database.js';
 
-const db = new Database();
-
 export const load = async ({ url }) => {
+    const db = new Database();
     try {
         await db.connect();
         
@@ -42,6 +41,7 @@ export const actions = {
         const data = await request.formData();
         const startDate = data.get('start_date');
         const endDate = data.get('end_date');
+        const db = new Database();
 
         try {
             await db.connect();
