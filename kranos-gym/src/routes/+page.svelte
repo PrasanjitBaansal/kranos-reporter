@@ -237,16 +237,24 @@
 			</div>
 			
 			<div class="activity-list">
-				{#each recentActivity.slice(0, 5) as activity}
+				{#each recentActivities.slice(0, 5) as activity}
 					<div class="activity-item">
 						<div class="activity-icon">
-							{activity.type === 'member' ? '👤' : '💪'}
+							{activity.icon}
 						</div>
 						<div class="activity-content">
 							<div class="activity-main">
-								<span class="activity-name">{activity.member}</span>
-								{activity.action}
-								<span class="highlight">{activity.details}</span>
+								<span class="activity-name">{activity.name}</span>
+								{#if activity.type === 'new_member'}
+									joined the gym
+								{:else if activity.type === 'renewal'}
+									renewed membership
+								{:else if activity.type === 'pt_booking'}
+									booked PT sessions
+									{#if activity.amount}
+										<span class="highlight">{activity.amount}</span>
+									{/if}
+								{/if}
 							</div>
 							<div class="activity-time">{activity.timestamp}</div>
 						</div>
