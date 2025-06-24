@@ -73,24 +73,15 @@ class Database {
         if (activeOnly) {
             // Get members with active memberships (current date between start_date and end_date)
             const query = `
-                SELECT DISTINCT m.*, 
-                       CASE 
-                           WHEN EXISTS(
-                               SELECT 1 FROM group_class_memberships gcm 
-                               WHERE gcm.member_id = m.id 
-                               AND gcm.status = 'Active'
-                               AND DATE('now') BETWEEN gcm.start_date AND gcm.end_date
-                           ) THEN 'Active'
-                           WHEN EXISTS(
-                               SELECT 1 FROM group_class_memberships gcm 
-                               WHERE gcm.member_id = m.id 
-                               AND gcm.status != 'Deleted'
-                           ) THEN 'Inactive'
-                           ELSE 'Inactive'
-                       END as calculated_status
+                SELECT DISTINCT m.*
                 FROM members m
                 WHERE m.status != 'Deleted'
-                HAVING calculated_status = 'Active'
+                AND EXISTS(
+                    SELECT 1 FROM group_class_memberships gcm 
+                    WHERE gcm.member_id = m.id 
+                    AND gcm.status = 'Active'
+                    AND DATE('now') BETWEEN gcm.start_date AND gcm.end_date
+                )
                 ORDER BY m.name`;
             
             return new Promise((resolve, reject) => {
@@ -525,7 +516,7 @@ class Database {
                 
                 // Update member status
                 this.db.run(
-                    'UPDATE members SET status = ? WHERE id = ? AND status != \\'Deleted\\'',
+                    'UPDATE members SET status = ? WHERE id = ? AND status != \'Deleted\'',
                     [newStatus, memberId],
                     function(updateErr) {
                         if (updateErr) {
@@ -544,7 +535,7 @@ class Database {
         
         return new Promise((resolve, reject) => {
             // Get all non-deleted members
-            this.db.all('SELECT id FROM members WHERE status != \\'Deleted\\'', [], async (err, members) => {
+            this.db.all('SELECT id FROM members WHERE status != \'Deleted\'', [], async (err, members) => {
                 if (err) {
                     reject(err);
                     return;

@@ -4,6 +4,55 @@ All notable changes to the Kranos Gym Management System will be documented in th
 
 ## [Unreleased]
 
+## [1.0.7] - 2025-06-23 - 🔄 Database Schema Modernization
+
+### 🗄️ Major Database Schema Changes
+- **Status Field Migration**: Replaced all `is_active` boolean fields with `status` TEXT fields across all tables
+- **Three-State Status System**: Implemented 'Active', 'Inactive', 'Deleted' status values with CHECK constraints
+- **Soft Delete Implementation**: All delete operations now use soft delete (status = 'Deleted') to preserve historical data
+- **Member Status Logic**: Member status now auto-calculated based on active membership dates
+
+### 📋 Schema Updates
+- **Members Table**: `is_active` → `status` with automatic calculation based on membership activity
+- **Group Plans Table**: `is_active` → `status` for plan lifecycle management  
+- **Group Class Memberships Table**: `is_active` → `status` for membership tracking
+- **Data Migration**: Seamlessly migrated existing boolean values to new status system
+
+### 🧠 Business Logic Enhancement  
+- **Active Member Definition**: Members with at least one membership where current date is between start_date and end_date
+- **Inactive Member Definition**: Members whose latest membership has expired
+- **Deleted Member Definition**: Soft-deleted members (preserves membership history)
+- **Auto Status Updates**: Member status automatically updates when memberships change
+
+### 🔧 Database Operations
+- **Status-Aware Queries**: All database queries updated to use status field instead of is_active
+- **Member Status Calculation**: Added `updateMemberStatus()` and `updateAllMemberStatuses()` functions
+- **Soft Delete Logic**: Updated all delete operations to set status = 'Deleted' instead of removing records
+- **Query Filtering**: All fetch operations now filter out 'Deleted' records by default
+
+### 🎨 UI/UX Improvements
+- **Status Badges**: Added visual status indicators (Active/Inactive/Deleted) throughout UI
+- **Status Dropdowns**: Updated forms to include status selection with proper validation
+- **Visual Feedback**: Status badges with color coding (green=Active, red=Inactive, gray=Deleted)
+- **Form Updates**: All forms now support the new three-state status system
+
+### 🔄 Migration Process
+- **Database Schema Migration**: Automated migration from old `is_active` to new `status` fields
+- **Data Preservation**: All existing data preserved during migration process
+- **Migration Script Updates**: Updated migration script to use new status field format
+- **Backward Compatibility**: Ensured smooth transition from boolean to status-based system
+
+### 📊 Documentation Updates
+- **CLAUDE.md**: Updated database schema documentation to reflect new status fields
+- **Business Logic**: Enhanced documentation with new member status definitions and calculation logic
+- **Schema Reference**: Complete documentation of new three-state status system
+
+### ✅ Quality Assurance
+- **Database Testing**: Comprehensive testing of all CRUD operations with new status system
+- **Status Logic Testing**: Verified member status calculation logic with real data
+- **Migration Testing**: Confirmed successful migration of existing database to new schema
+- **UI Testing**: Verified all components work correctly with new status field
+
 ## [1.0.6] - 2025-06-23 - 💱 Currency Localization to Indian Rupee
 
 ### 🌏 Currency Symbol Update

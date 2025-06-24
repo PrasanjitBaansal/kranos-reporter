@@ -249,19 +249,19 @@ export function migrateFromExcel(excelPath = '../static/data/Kranos MMA Members.
         
         // Prepare database statements
         const insertMember = db.prepare(`
-            INSERT OR REPLACE INTO members (name, phone, email, join_date, is_active)
-            VALUES (?, ?, ?, ?, 1)
+            INSERT OR REPLACE INTO members (name, phone, email, join_date, status)
+            VALUES (?, ?, ?, ?, 'Inactive')
         `);
         
         const insertPlan = db.prepare(`
-            INSERT OR REPLACE INTO group_plans (name, duration_days, default_amount, display_name, is_active)
-            VALUES (?, ?, ?, ?, 1)
+            INSERT OR REPLACE INTO group_plans (name, duration_days, default_amount, display_name, status)
+            VALUES (?, ?, ?, ?, 'Active')
         `);
         
         const insertGCMembership = db.prepare(`
             INSERT INTO group_class_memberships 
-            (member_id, plan_id, start_date, end_date, amount_paid, purchase_date, membership_type, is_active)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+            (member_id, plan_id, start_date, end_date, amount_paid, purchase_date, membership_type, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'Active')
         `);
         
         const insertPTMembership = db.prepare(`

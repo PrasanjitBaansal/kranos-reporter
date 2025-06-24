@@ -8,7 +8,7 @@
 - `phone`: TEXT, NOT NULL, UNIQUE
 - `email`: TEXT
 - `join_date`: TEXT
-- `is_active`: BOOLEAN, NOT NULL (default: 1)
+- `status`: TEXT, NOT NULL (default: 'Active') CHECK (status IN ('Active', 'Inactive', 'Deleted'))
 
 ### group_plans table
 - `id`: INTEGER, PRIMARY KEY, AUTOINCREMENT
@@ -16,7 +16,7 @@
 - `duration_days`: INTEGER, NOT NULL
 - `default_amount`: REAL, NOT NULL
 - `display_name`: TEXT, UNIQUE
-- `is_active`: BOOLEAN, NOT NULL (default: 1)
+- `status`: TEXT, NOT NULL (default: 'Active') CHECK (status IN ('Active', 'Inactive', 'Deleted'))
 
 ### group_class_memberships table
 - `id`: INTEGER, PRIMARY KEY, AUTOINCREMENT
@@ -27,7 +27,7 @@
 - `amount_paid`: REAL
 - `purchase_date`: TEXT
 - `membership_type`: TEXT (e.g., 'New' or 'Renewal')
-- `is_active`: BOOLEAN, NOT NULL (default: 1)
+- `status`: TEXT, NOT NULL (default: 'Active') CHECK (status IN ('Active', 'Inactive', 'Deleted'))
 - `UNIQUE` constraint on (`member_id`, `plan_id`, `start_date`)
 
 ### pt_memberships table
@@ -40,13 +40,22 @@
 
 ## Business Logic
 
+### Member Status Management
+- **Active Members**: Members with at least one active membership (current date between start_date and end_date)
+- **Inactive Members**: Members whose latest membership has expired
+- **Deleted Members**: Soft-deleted members (preserves membership history)
+- Status is automatically calculated based on membership dates and updated when memberships change
+
 ### Member and Plan Management
 - Create, update, delete members (unique phone numbers)
+- Members are soft-deleted to preserve membership data
 - Create and manage group class plans with auto-generated `display_name` (e.g., "MMA Focus - 90 days")
+- Plans are soft-deleted to preserve membership history
 
 ### Membership Processing
 - **Group Class**: Auto-calculate `end_date` by adding plan duration to start date
 - Auto-categorize as 'New' or 'Renewal' based on member history
+- Memberships can be soft-deleted to preserve history
 - **PT**: Set `sessions_remaining` equal to `sessions_total` when purchased
 
 ### Reporting
