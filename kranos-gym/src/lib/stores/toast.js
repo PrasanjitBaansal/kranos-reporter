@@ -47,6 +47,9 @@ function createToastStore() {
 			}, 300);
 		},
 		clear: () => set([]),
+		show: (message, type = 'info', duration) => {
+			return toastStore.add({ type, message, duration });
+		},
 		// Convenience methods
 		success: (message, duration) => {
 			return toastStore.add({ type: 'success', message, duration });

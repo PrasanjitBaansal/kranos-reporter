@@ -3,12 +3,93 @@
 	import { onMount } from 'svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	
+	export let data;
+	
 	let isMenuOpen = false;
+	$: appSettings = data.appSettings || {};
 	
 	onMount(async () => {
 		// Add smooth scrolling behavior
 		document.documentElement.style.scrollBehavior = 'smooth';
+		
+		// Apply theme and color settings
+		applyAppSettings();
 	});
+	
+	// Apply settings when they change
+	$: if (appSettings) {
+		applyAppSettings();
+	}
+	
+	function applyAppSettings() {
+		if (typeof window === 'undefined') return;
+		
+		// Apply theme
+		const theme = appSettings.theme_mode || 'dark';
+		document.documentElement.setAttribute('data-theme', theme);
+		
+		if (theme === 'light') {
+			document.documentElement.style.setProperty('--background', '#ffffff');
+			document.documentElement.style.setProperty('--surface', '#f8f9fa');
+			document.documentElement.style.setProperty('--surface-light', '#e9ecef');
+			document.documentElement.style.setProperty('--text', '#212529');
+			document.documentElement.style.setProperty('--text-muted', '#6c757d');
+			document.documentElement.style.setProperty('--border', '#dee2e6');
+		} else {
+			document.documentElement.style.setProperty('--background', '#0a0a0a');
+			document.documentElement.style.setProperty('--surface', '#1a1a1a');
+			document.documentElement.style.setProperty('--surface-light', '#2a2a2a');
+			document.documentElement.style.setProperty('--text', '#ffffff');
+			document.documentElement.style.setProperty('--text-muted', '#b0b0b0');
+			document.documentElement.style.setProperty('--border', '#333333');
+		}
+		
+		// Apply accent color
+		const color = appSettings.accent_color || '#f39407';
+		document.documentElement.style.setProperty('--primary', color);
+		
+		// Generate darker variant
+		const darkColor = adjustBrightness(color, -20);
+		document.documentElement.style.setProperty('--primary-dark', darkColor);
+		
+		// Generate lighter variant
+		const lightColor = adjustBrightness(color, 40);
+		document.documentElement.style.setProperty('--primary-light', lightColor);
+		
+		// Update gradients
+		document.documentElement.style.setProperty('--gradient-primary', `linear-gradient(135deg, ${color} 0%, ${darkColor} 100%)`);
+		document.documentElement.style.setProperty('--gradient-glow', `linear-gradient(135deg, ${hexToRgba(color, 0.2)} 0%, ${hexToRgba(color, 0.05)} 100%)`);
+		
+		// Update favicon
+		const faviconPath = appSettings.favicon_path || '/favicon.png';
+		updateFavicon(faviconPath);
+	}
+	
+	function adjustBrightness(hex, percent) {
+		const num = parseInt(hex.replace('#', ''), 16);
+		const amt = Math.round(2.55 * percent);
+		const R = (num >> 16) + amt;
+		const G = (num >> 8 & 0x00FF) + amt;
+		const B = (num & 0x0000FF) + amt;
+		return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+			(G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+			(B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+	}
+	
+	function hexToRgba(hex, alpha) {
+		const r = parseInt(hex.slice(1, 3), 16);
+		const g = parseInt(hex.slice(3, 5), 16);
+		const b = parseInt(hex.slice(5, 7), 16);
+		return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+	}
+	
+	function updateFavicon(href) {
+		const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+		link.type = 'image/png';
+		link.rel = 'icon';
+		link.href = href;
+		document.getElementsByTagName('head')[0].appendChild(link);
+	}
 	
 	const navItems = [
 		{ path: '/', label: 'Dashboard', icon: '📊' },
@@ -28,7 +109,11 @@
 		<div class="nav-container">
 			<div class="nav-brand">
 				<div class="logo">
-					<span class="logo-icon">🏋️</span>
+					{#if appSettings.logo_type === 'emoji'}
+						<span class="logo-icon">{appSettings.logo_value || '🏋️'}</span>
+					{:else}
+						<img src={appSettings.logo_value || '/favicon.png'} alt="Kranos Gym" class="logo-image" />
+					{/if}
 					<span class="logo-text">Kranos Gym</span>
 				</div>
 				<button class="menu-toggle" on:click={toggleMenu} aria-label="Toggle navigation menu">
@@ -231,6 +316,13 @@
 	
 	.logo-icon {
 		font-size: 2rem;
+		filter: drop-shadow(0 0 10px var(--primary));
+	}
+	
+	.logo-image {
+		width: 2rem;
+		height: 2rem;
+		object-fit: contain;
 		filter: drop-shadow(0 0 10px var(--primary));
 	}
 	

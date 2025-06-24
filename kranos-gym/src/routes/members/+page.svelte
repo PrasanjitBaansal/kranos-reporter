@@ -3,6 +3,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import { showSuccess, showError } from '$lib/stores/toast.js';
 	import Modal from '$lib/components/Modal.svelte';
+	import MemberDetailsModal from '$lib/components/MemberDetailsModal.svelte';
 
 	export let data;
 	export const form = undefined; // For external reference only
@@ -12,16 +13,37 @@
 	let searchTerm = '';
 	let isLoading = false;
 	let showModal = false;
+	let showDetailsModal = false;
+	let detailsMember = null;
 	let formErrors = {};
+	let joinDateFrom = '';
+	let joinDateTo = '';
+	let statusFilter = 'all'; // 'all', 'active', 'inactive'
 
 	$: members = data.members || [];
-	$: filteredMembers = members.filter(member => 
-		member.status !== 'Deleted' && (
+	$: filteredMembers = members.filter(member => {
+		if (member.status === 'Deleted') return false;
+		
+		// Search filter
+		const matchesSearch = searchTerm === '' || (
 			member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			member.phone.toString().includes(searchTerm) ||
 			(member.email && member.email.toLowerCase().includes(searchTerm.toLowerCase()))
-		)
-	);
+		);
+		
+		// Date range filter
+		const matchesDateRange = (!joinDateFrom && !joinDateTo) || (
+			(!joinDateFrom || member.join_date >= joinDateFrom) &&
+			(!joinDateTo || member.join_date <= joinDateTo)
+		);
+		
+		// Status filter
+		const matchesStatus = statusFilter === 'all' || 
+			(statusFilter === 'active' && member.status === 'Active') ||
+			(statusFilter === 'inactive' && member.status === 'Inactive');
+		
+		return matchesSearch && matchesDateRange && matchesStatus;
+	});
 
 	function editMember(member) {
 		selectedMember = member;
@@ -44,6 +66,31 @@
 		formErrors = {};
 	}
 
+	function showMemberDetails(member) {
+		detailsMember = member;
+		showDetailsModal = true;
+	}
+
+	function closeDetailsModal() {
+		showDetailsModal = false;
+		detailsMember = null;
+	}
+
+	function handleRowClick(event, member) {
+		// Don't open modal if clicking on a button
+		if (event.target.closest('button')) {
+			return;
+		}
+		showMemberDetails(member);
+	}
+
+	function clearFilters() {
+		joinDateFrom = '';
+		joinDateTo = '';
+		statusFilter = 'all';
+		searchTerm = '';
+	}
+
 	function validateForm(formData) {
 		const errors = {};
 		const name = formData.get('name');
@@ -56,9 +103,11 @@
 			errors.name = 'Name can only contain letters, numbers, and spaces';
 		}
 
-		// Phone validation (exactly 10 digits)
-		if (!phone || !/^\d{10}$/.test(phone.trim())) {
-			errors.phone = 'Phone number must be exactly 10 digits';
+		// Phone validation (exactly 10 digits) - skip when editing
+		if (!isEditing) {
+			if (!phone || !/^\d{10}$/.test(phone)) {
+				errors.phone = 'Phone number must be exactly 10 digits';
+			}
 		}
 
 		// Email validation (if provided)
@@ -87,10 +136,22 @@
 			formErrors = {};
 
 			if (result.type === 'success') {
-				showSuccess(isEditing ? 'Member updated successfully!' : 'Member created successfully!');
-				closeModal();
-				await invalidateAll();
+				// Check if server-side validation passed
+				if (result.data?.success === false) {
+					// Server-side validation failed - show as form error
+					if (result.data.error?.includes('Phone number')) {
+						formErrors = { ...formErrors, phone: result.data.error };
+					} else {
+						formErrors = { ...formErrors, general: result.data.error };
+					}
+				} else {
+					// Success - show success message, close modal and refresh data
+					showSuccess(isEditing ? 'Member updated successfully!' : 'Member created successfully!');
+					closeModal();
+					await invalidateAll();
+				}
 			} else if (result.type === 'failure') {
+				// System/network errors
 				if (result.data?.error) {
 					showError(result.data.error);
 				} else {
@@ -110,8 +171,7 @@
 	<div class="page-header">
 		<div class="header-content">
 			<h1 class="page-title animate-slide-up">
-				<span class="title-icon">👥</span>
-				Members Management
+				Member Management
 			</h1>
 			<p class="page-subtitle animate-slide-up">Manage gym members and their information</p>
 		</div>
@@ -131,14 +191,52 @@
 					Members List
 					<span class="member-count">({filteredMembers.length})</span>
 				</h2>
-				<div class="search-container">
-					<input
-						type="text"
-						placeholder="Search members..."
-						bind:value={searchTerm}
-						class="search-input"
-					/>
-					<span class="search-icon">🔍</span>
+				<div class="filters-container">
+					<!-- Date Range Filter -->
+					<div class="filter-group">
+						<label class="filter-label">📅 Join Date:</label>
+						<div class="date-range">
+							<input
+								type="date"
+								bind:value={joinDateFrom}
+								class="date-input"
+								placeholder="From"
+							/>
+							<span class="date-separator">to</span>
+							<input
+								type="date"
+								bind:value={joinDateTo}
+								class="date-input"
+								placeholder="To"
+							/>
+						</div>
+					</div>
+
+					<!-- Status Filter -->
+					<div class="filter-group">
+						<label class="filter-label">🎯 Status:</label>
+						<select bind:value={statusFilter} class="status-select">
+							<option value="all">All Members</option>
+							<option value="active">Active Only</option>
+							<option value="inactive">Inactive Only</option>
+						</select>
+					</div>
+
+					<!-- Clear Filters -->
+					<button class="btn btn-secondary btn-sm" on:click={clearFilters}>
+						🔄 Clear
+					</button>
+
+					<!-- Search -->
+					<div class="search-container">
+						<input
+							type="text"
+							placeholder="Search members..."
+							bind:value={searchTerm}
+							class="search-input"
+						/>
+						<span class="search-icon">🔍</span>
+					</div>
 				</div>
 			</div>
 			
@@ -163,7 +261,7 @@
 						</thead>
 						<tbody>
 							{#each filteredMembers as member}
-								<tr class="member-row">
+								<tr class="member-row clickable" on:click={(e) => handleRowClick(e, member)}>
 									<td class="member-name">
 										{member.name}
 									</td>
@@ -208,9 +306,16 @@
 		action={isEditing ? '?/update' : '?/create'}
 		use:enhance={submitForm}
 		class="member-form-content"
+		novalidate
 	>
 		{#if isEditing}
 			<input type="hidden" name="id" value={selectedMember?.id} />
+		{/if}
+
+		{#if formErrors.general}
+			<div class="general-error">
+				<span class="error-message">{formErrors.general}</span>
+			</div>
 		{/if}
 
 		<div class="form-group">
@@ -222,8 +327,6 @@
 				value={selectedMember?.name || ''}
 				class="form-control"
 				class:error={formErrors.name}
-				required
-				pattern="[a-zA-Z0-9\s]+"
 				placeholder="Enter full name (letters, numbers, spaces only)"
 			/>
 			{#if formErrors.name}
@@ -240,12 +343,20 @@
 				value={selectedMember?.phone || ''}
 				class="form-control"
 				class:error={formErrors.phone}
-				required
-				pattern="\d{10}"
-				maxlength="10"
-				placeholder="Enter 10-digit phone number"
+				class:disabled={isEditing}
+				disabled={isEditing}
+				inputmode="numeric"
+				placeholder={isEditing ? 'Phone number cannot be changed' : '1234567890'}
+				on:input={(e) => {
+					if (!isEditing) {
+						// Clear phone validation error when user types valid input
+						if (formErrors.phone && /^\d{10}$/.test(e.target.value)) {
+							formErrors = { ...formErrors, phone: '' };
+						}
+					}
+				}}
 			/>
-			{#if formErrors.phone}
+			{#if formErrors.phone && !isEditing}
 				<span class="error-message">{formErrors.phone}</span>
 			{/if}
 		</div>
@@ -275,7 +386,11 @@
 				value={selectedMember?.join_date || new Date().toISOString().split('T')[0]}
 				class="form-control"
 				class:error={formErrors.join_date}
-				required
+				on:input={() => {
+					if (formErrors.join_date) {
+						formErrors = { ...formErrors, join_date: '' };
+					}
+				}}
 			/>
 			{#if formErrors.join_date}
 				<span class="error-message">{formErrors.join_date}</span>
@@ -306,20 +421,31 @@
 	</form>
 	
 	{#if isEditing}
-		<form method="post" action="?/delete" use:enhance={submitForm} class="delete-form">
-			<input type="hidden" name="id" value={selectedMember?.id} />
-			<button 
-				type="submit" 
-				class="btn btn-danger"
-				on:click={() => confirm('Are you sure you want to delete this member?')}
-				disabled={isLoading}
-			>
-				<span class="btn-icon">🗑️</span>
-				Delete Member
-			</button>
-		</form>
+		<div class="delete-section">
+			<form method="post" action="?/delete" use:enhance={submitForm} class="delete-form">
+				<input type="hidden" name="id" value={selectedMember?.id} />
+				<button 
+					type="submit" 
+					class="btn btn-danger"
+					on:click={(e) => {
+						e.preventDefault();
+						if (confirm('Are you sure you want to delete this member? This action cannot be undone.')) {
+							formErrors = {}; // Clear any validation errors
+							e.target.form.submit();
+						}
+					}}
+					disabled={isLoading}
+				>
+					<span class="btn-icon">🗑️</span>
+					Delete Member
+				</button>
+			</form>
+		</div>
 	{/if}
 </Modal>
+
+<!-- Member Details Modal -->
+<MemberDetailsModal bind:show={showDetailsModal} member={detailsMember} on:close={closeDetailsModal} />
 
 <style>
 	.members-page {
@@ -335,6 +461,8 @@
 		margin-bottom: 3rem;
 		flex-wrap: wrap;
 		gap: 1rem;
+		width: 100%;
+		overflow: visible;
 	}
 
 	.header-content h1 {
@@ -345,14 +473,16 @@
 		-webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
 		background-clip: text;
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
+		white-space: nowrap;
+		overflow: visible;
+		flex-shrink: 0;
 	}
 
-	.title-icon {
-		font-size: 3rem;
-		filter: drop-shadow(0 0 20px var(--primary));
+
+	.header-content {
+		flex: 1;
+		min-width: 0;
+		overflow: visible;
 	}
 
 	.page-subtitle {
@@ -468,12 +598,14 @@
 	}
 
 	.members-table th {
-		background: var(--gradient-glow);
+		background: var(--surface-light);
 		font-weight: 600;
 		color: var(--text);
 		position: sticky;
 		top: 0;
 		z-index: 10;
+		border-bottom: 2px solid var(--primary);
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 	}
 
 	.member-row {
@@ -482,6 +614,16 @@
 
 	.member-row:hover {
 		background: var(--gradient-glow);
+	}
+
+	.member-row.clickable {
+		cursor: pointer;
+		transition: var(--transition-fast);
+	}
+
+	.member-row.clickable:hover {
+		transform: translateY(-1px);
+		box-shadow: 0 2px 8px rgba(243, 148, 7, 0.2);
 	}
 
 	.member-name {
@@ -569,10 +711,30 @@
 		box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
 	}
 
+	.form-control.disabled {
+		background: var(--bg-secondary);
+		color: var(--text-muted);
+		cursor: not-allowed;
+		opacity: 0.7;
+	}
+
 	.error-message {
 		color: var(--error);
 		font-size: 0.8rem;
 		margin-top: 0.25rem;
+	}
+
+	.general-error {
+		padding: 0.75rem;
+		background: rgba(239, 68, 68, 0.1);
+		border: 1px solid var(--error);
+		border-radius: 8px;
+		margin-bottom: 1rem;
+	}
+
+	.general-error .error-message {
+		margin-top: 0;
+		font-size: 0.9rem;
 	}
 
 	.form-actions {
@@ -600,10 +762,88 @@
 		100% { transform: rotate(360deg); }
 	}
 
-	.delete-form {
-		margin-top: 1rem;
+	.delete-section {
+		margin-top: 1.5rem;
 		padding-top: 1rem;
 		border-top: 1px solid var(--border);
+	}
+
+	.delete-form {
+		margin: 0;
+	}
+
+	/* Filters */
+	.filters-container {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		flex-wrap: wrap;
+		min-width: 0;
+	}
+
+	.filter-group {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		min-width: 0;
+	}
+
+	.filter-label {
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--text-muted);
+		white-space: nowrap;
+	}
+
+	.date-range {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.date-input {
+		padding: 0.5rem;
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		background: var(--surface);
+		color: var(--text);
+		font-size: 0.85rem;
+		min-width: 120px;
+		transition: var(--transition-fast);
+	}
+
+	.date-input:focus {
+		outline: none;
+		border-color: var(--primary);
+		box-shadow: 0 0 0 2px rgba(243, 148, 7, 0.2);
+	}
+
+	.date-separator {
+		font-size: 0.8rem;
+		color: var(--text-muted);
+		white-space: nowrap;
+	}
+
+	.status-select {
+		padding: 0.5rem;
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		background: var(--surface);
+		color: var(--text);
+		font-size: 0.85rem;
+		min-width: 120px;
+		transition: var(--transition-fast);
+	}
+
+	.status-select:focus {
+		outline: none;
+		border-color: var(--primary);
+		box-shadow: 0 0 0 2px rgba(243, 148, 7, 0.2);
+	}
+
+	.search-container {
+		min-width: 200px;
+		flex: 1;
 	}
 
 	@media (max-width: 768px) {
@@ -623,6 +863,31 @@
 		.card-header {
 			flex-direction: column;
 			align-items: flex-start;
+		}
+
+		.filters-container {
+			flex-direction: column;
+			align-items: stretch;
+			width: 100%;
+			gap: 1rem;
+		}
+
+		.filter-group {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.25rem;
+		}
+
+		.date-range {
+			flex-direction: column;
+			gap: 0.5rem;
+			width: 100%;
+		}
+
+		.date-input,
+		.status-select {
+			width: 100%;
+			min-width: auto;
 		}
 
 		.search-container {

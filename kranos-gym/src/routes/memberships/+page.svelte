@@ -11,6 +11,7 @@
 	let selectedPlan = null;
 	let isLoading = false;
 	let searchTerm = '';
+	let formErrors = {};
 	
 	$: members = data.members || [];
 	$: plans = data.groupPlans || [];
@@ -55,6 +56,7 @@
 	function resetForm() {
 		selectedMember = null;
 		selectedPlan = null;
+		formErrors = {};
 		gcFormData = {
 			member_id: '',
 			plan_id: '',
@@ -84,10 +86,64 @@
 		gcFormData.amount_paid = plan.default_amount;
 	}
 	
+	function validateForm(formData) {
+		const errors = {};
+		const member_id = formData.get('member_id');
+
+		// Member selection validation
+		if (!member_id || !selectedMember) {
+			errors.member = 'Please select a member';
+		}
+
+		if (membershipType === 'group_class') {
+			const plan_id = formData.get('plan_id');
+			const start_date = formData.get('start_date');
+			const amount_paid = formData.get('amount_paid');
+
+			// Plan selection validation
+			if (!plan_id || !selectedPlan) {
+				errors.plan = 'Please select a plan';
+			}
+
+			// Start date validation
+			if (!start_date) {
+				errors.start_date = 'Start date is required';
+			}
+
+			// Amount validation
+			if (!amount_paid || amount_paid <= 0 || isNaN(Number(amount_paid))) {
+				errors.amount_paid = 'Amount paid must be a positive number';
+			}
+		} else {
+			const sessions_total = formData.get('sessions_total');
+			const amount_paid = formData.get('amount_paid');
+
+			// Sessions validation
+			if (!sessions_total || sessions_total <= 0 || !Number.isInteger(Number(sessions_total))) {
+				errors.sessions_total = 'Total sessions must be a positive whole number';
+			}
+
+			// Amount validation
+			if (!amount_paid || amount_paid <= 0 || isNaN(Number(amount_paid))) {
+				errors.amount_paid = 'Amount paid must be a positive number';
+			}
+		}
+
+		return errors;
+	}
+
 	const submitForm = () => {
-		isLoading = true;
-		return async ({ result }) => {
-			isLoading = false;
+		return async ({ formData, result }) => {
+			// Client-side validation
+			const errors = validateForm(formData);
+			if (Object.keys(errors).length > 0) {
+				formErrors = errors;
+				return;
+			}
+
+			isLoading = true;
+			formErrors = {};
+
 			if (result.type === 'success') {
 				showSuccess(`${membershipType === 'group_class' ? 'Group class' : 'Personal training'} membership created successfully!`);
 				resetForm();
@@ -95,6 +151,7 @@
 			} else if (result.type === 'failure') {
 				showError(form?.error || 'Failed to create membership. Please try again.');
 			}
+			isLoading = false;
 		};
 	};
 	
@@ -243,6 +300,7 @@
 				action={membershipType === 'group_class' ? '?/createGC' : '?/createPT'}
 				use:enhance={submitForm} 
 				class="membership-form-content"
+				novalidate
 			>
 				<!-- Hidden form fields for selected member and plan -->
 				<input type="hidden" name="member_id" value={selectedMember?.id || ''} />
@@ -254,6 +312,9 @@
 						<span class="section-icon">👤</span>
 						Select Member
 					</h3>
+					{#if formErrors.member}
+						<div class="error-message">{formErrors.member}</div>
+					{/if}
 					<div class="member-grid">
 						{#each members.filter(m => m.status === 'Active') as member}
 							<button
@@ -281,6 +342,9 @@
 							<span class="section-icon">💪</span>
 							Select Plan
 						</h3>
+						{#if formErrors.plan}
+							<div class="error-message">{formErrors.plan}</div>
+						{/if}
 						<div class="plan-grid">
 							{#each plans.filter(p => p.status === 'Active') as plan}
 								<button
@@ -317,9 +381,17 @@
 								id="start_date" 
 								name="start_date"
 								class="form-control"
-								bind:value={gcFormData.start_date} 
-								required 
+								class:error={formErrors.start_date}
+								bind:value={gcFormData.start_date}
+								on:input={() => {
+									if (formErrors.start_date) {
+										formErrors = { ...formErrors, start_date: '' };
+									}
+								}}
 							/>
+							{#if formErrors.start_date}
+								<span class="error-message">{formErrors.start_date}</span>
+							{/if}
 						</div>
 						
 						<div class="form-group">
@@ -331,13 +403,19 @@
 									id="amount_paid" 
 									name="amount_paid"
 									class="form-control"
-									bind:value={gcFormData.amount_paid} 
-									required 
-									min="0"
-									step="0.01"
+									class:error={formErrors.amount_paid}
+									bind:value={gcFormData.amount_paid}
 									placeholder="0.00"
+									on:input={() => {
+										if (formErrors.amount_paid) {
+											formErrors = { ...formErrors, amount_paid: '' };
+										}
+									}}
 								/>
 							</div>
+							{#if formErrors.amount_paid}
+								<span class="error-message">{formErrors.amount_paid}</span>
+							{/if}
 						</div>
 						
 						<div class="form-group">
@@ -355,11 +433,18 @@
 								id="sessions_total" 
 								name="sessions_total"
 								class="form-control"
-								bind:value={ptFormData.sessions_total} 
-								required 
-								min="1"
+								class:error={formErrors.sessions_total}
+								bind:value={ptFormData.sessions_total}
 								placeholder="e.g., 10, 20"
+								on:input={() => {
+									if (formErrors.sessions_total) {
+										formErrors = { ...formErrors, sessions_total: '' };
+									}
+								}}
 							/>
+							{#if formErrors.sessions_total}
+								<span class="error-message">{formErrors.sessions_total}</span>
+							{/if}
 						</div>
 						
 						<div class="form-group">
@@ -371,13 +456,19 @@
 									id="pt_amount_paid" 
 									name="amount_paid"
 									class="form-control"
-									bind:value={ptFormData.amount_paid} 
-									required 
-									min="0"
-									step="0.01"
+									class:error={formErrors.amount_paid}
+									bind:value={ptFormData.amount_paid}
 									placeholder="0.00"
+									on:input={() => {
+										if (formErrors.amount_paid) {
+											formErrors = { ...formErrors, amount_paid: '' };
+										}
+									}}
 								/>
 							</div>
+							{#if formErrors.amount_paid}
+								<span class="error-message">{formErrors.amount_paid}</span>
+							{/if}
 						</div>
 					{/if}
 				</div>

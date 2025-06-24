@@ -12,9 +12,12 @@ A modern, full-featured gym management system built with SvelteKit, featuring a 
 
 ### 👥 Member Management
 - Complete CRUD operations for gym members
-- Advanced search and filtering
-- Member status tracking (active/inactive)
-- Contact information management
+- **Interactive Member Details**: Click on any member row to view detailed membership history
+- **Advanced Filtering**: Date range filtering by join date and status filtering (Active/Inactive)
+- **Enhanced Search**: Real-time search across member names, phone numbers, and emails
+- **Member Status Tracking**: Automatic active/inactive status based on membership dates
+- **Membership History Modal**: View complete membership history with renewal counts and detailed records
+- **Contact Information Management**: Phone, email, and join date tracking
 
 ### 💪 Group Plans
 - Flexible membership plan creation

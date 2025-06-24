@@ -15,6 +15,34 @@ function excelDateToString(serial) {
     return date.toISOString().split('T')[0];
 }
 
+function initializeDefaultSettings(db) {
+    try {
+        console.log('Initializing default app settings...');
+        
+        const insertSetting = db.prepare(`
+            INSERT OR IGNORE INTO app_settings (setting_key, setting_value, created_at, updated_at)
+            VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        `);
+        
+        // Default settings
+        const defaultSettings = [
+            ['accent_color', '#f39407'],
+            ['theme_mode', 'dark'],
+            ['favicon_path', '/favicon.png'],
+            ['logo_type', 'emoji'],
+            ['logo_value', '🏋️']
+        ];
+        
+        defaultSettings.forEach(([key, value]) => {
+            insertSetting.run(key, value);
+        });
+        
+        console.log('✓ Default app settings initialized');
+    } catch (error) {
+        console.error('Error initializing default settings:', error.message);
+    }
+}
+
 export function initializeDatabase() {
     try {
         console.log('Initializing database...');
@@ -41,6 +69,10 @@ export function initializeDatabase() {
         });
         
         console.log('Database initialized successfully');
+        
+        // Initialize default app settings
+        initializeDefaultSettings(db);
+        
         return db;
     } catch (error) {
         console.error('Error initializing database:', error.message);

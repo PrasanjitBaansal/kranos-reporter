@@ -1,5 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	import PasswordModal from '$lib/components/PasswordModal.svelte';
 	
 	export let data;
 	
@@ -12,6 +14,7 @@
 	
 	let isLoading = true;
 	let recentActivities = [];
+	let showPasswordModal = false;
 	
 	onMount(async () => {
 		await loadDashboardData();
@@ -113,6 +116,19 @@
 			style: 'currency',
 			currency: 'INR'
 		}).format(amount);
+	}
+	
+	function handleAdminClick() {
+		showPasswordModal = true;
+	}
+	
+	function handlePasswordSuccess() {
+		showPasswordModal = false;
+		goto('/settings');
+	}
+	
+	function handlePasswordClose() {
+		showPasswordModal = false;
 	}
 </script>
 
@@ -262,8 +278,27 @@
 				{/each}
 			</div>
 		</div>
+		
+		<!-- Admin Access Button -->
+		<div class="admin-access animate-slide-up">
+			<button 
+				class="admin-button" 
+				on:click={handleAdminClick}
+				title="Access admin settings"
+			>
+				<span class="admin-icon">⚙️</span>
+				<span class="admin-text">Admin</span>
+			</button>
+		</div>
 	{/if}
 </div>
+
+<!-- Password Modal -->
+<PasswordModal 
+	bind:show={showPasswordModal} 
+	on:success={handlePasswordSuccess}
+	on:close={handlePasswordClose}
+/>
 
 <style>
 	.dashboard {
@@ -651,6 +686,67 @@
 		}
 	}
 	
+	/* Admin Access Button */
+	.admin-access {
+		display: flex;
+		justify-content: flex-end;
+		margin-top: 2rem;
+		padding-top: 1rem;
+		animation-delay: 0.8s;
+	}
+	
+	.admin-button {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.6rem 1rem;
+		background: var(--gradient-dark);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-full);
+		color: var(--text-muted);
+		font-size: 0.85rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: var(--transition-medium);
+		position: relative;
+		overflow: hidden;
+	}
+	
+	.admin-button::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: var(--gradient-glow);
+		opacity: 0;
+		transition: var(--transition-medium);
+		z-index: -1;
+	}
+	
+	.admin-button:hover::before {
+		opacity: 0.3;
+	}
+	
+	.admin-button:hover {
+		color: var(--primary);
+		border-color: var(--primary);
+		transform: translateY(-1px);
+		box-shadow: 0 0 15px rgba(243, 148, 7, 0.2);
+	}
+	
+	.admin-icon {
+		font-size: 1rem;
+		filter: drop-shadow(0 0 5px currentColor);
+	}
+	
+	.admin-text {
+		font-size: 0.8rem;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+	
 	@media (max-width: 480px) {
 		.actions-grid-full {
 			grid-template-columns: 1fr;
@@ -664,6 +760,11 @@
 		
 		.footer-actions {
 			flex-direction: column;
+		}
+		
+		.admin-access {
+			justify-content: center;
+			margin-top: 1.5rem;
 		}
 	}
 </style>

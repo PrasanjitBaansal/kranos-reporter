@@ -18,10 +18,11 @@ export const actions = {
     create: async ({ request }) => {
         const db = new Database();
         const data = await request.formData();
+        const defaultAmount = data.get('default_amount');
         const plan = {
             name: data.get('name'),
             duration_days: parseInt(data.get('duration_days')),
-            default_amount: parseFloat(data.get('default_amount')),
+            default_amount: defaultAmount && defaultAmount.trim() !== '' ? parseFloat(defaultAmount) : null,
             display_name: data.get('display_name') || `${data.get('name')} - ${data.get('duration_days')} days`,
             status: data.get('status') || 'Active'
         };
@@ -41,10 +42,11 @@ export const actions = {
         const db = new Database();
         const data = await request.formData();
         const id = parseInt(data.get('id'));
+        const defaultAmount = data.get('default_amount');
         const plan = {
             name: data.get('name'),
             duration_days: parseInt(data.get('duration_days')),
-            default_amount: parseFloat(data.get('default_amount')),
+            default_amount: defaultAmount && defaultAmount.trim() !== '' ? parseFloat(defaultAmount) : null,
             display_name: data.get('display_name'),
             status: data.get('status') || 'Active'
         };

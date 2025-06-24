@@ -4,6 +4,161 @@ All notable changes to the Kranos Gym Management System will be documented in th
 
 ## [Unreleased]
 
+## [1.0.10] - 2025-06-24 - ⚙️ App Settings & Customization System
+
+### 🔐 Password-Protected Admin Settings
+- **Admin Access Control**: Added discrete admin button on dashboard with password modal (password: 'theadmin')
+- **PasswordModal Component**: Created secure password entry modal with validation, loading states, and error handling
+- **Access Flow**: Admin button → password modal → settings page navigation on successful authentication
+
+### 🎨 Dynamic Theming & Customization
+- **Accent Color Picker**: Real-time color customization with live preview and CSS variable updates
+- **Dark/Light Theme Toggle**: Complete theme switching with dynamic CSS variable updates for backgrounds, text, and borders
+- **Dynamic CSS Generation**: Automatic generation of color variants (primary, primary-dark, primary-light) and gradients
+- **Real-time Application**: Theme and color changes apply immediately across the entire application
+
+### 🖼️ File Upload System
+- **Favicon Upload**: PNG-only uploads with 100KB size limit, automatic browser favicon updates, and old file cleanup
+- **Logo Upload**: PNG-only uploads with 1MB size limit, replaces emoji logo (🏋️) with custom images in navigation
+- **File Validation**: Comprehensive validation for file type (PNG only), size limits, and security measures
+- **Automatic Cleanup**: Old uploaded files automatically deleted when replaced to prevent disk bloat
+
+### 🗄️ Settings Database Integration
+- **App Settings Table**: New `app_settings` table with key-value storage for all customization options
+- **Default Settings**: Automatic initialization with current app theme colors and default assets
+- **Global Settings Loading**: Settings loaded in layout server and applied across entire application
+- **Reset Functionality**: One-click restore to defaults with complete file cleanup
+
+### 🎯 Technical Implementation
+- **File Management**: Secure upload directory (`/static/uploads/`) with timestamped filenames to prevent conflicts
+- **Server Actions**: Complete server-side handling for color updates, theme changes, and file uploads
+- **Path Sanitization**: Security measures to prevent directory traversal and malicious file uploads
+- **Settings Persistence**: Database storage with automatic timestamp tracking (created_at, updated_at)
+
+### 🔧 UI/UX Features
+- **Live Previews**: Real-time preview of colors, themes, favicon, and logo changes
+- **Responsive Design**: Settings page optimized for desktop and mobile devices
+- **Visual Feedback**: Success/error messages, loading states, and progress indicators
+- **Professional Interface**: Modern card-based layout with consistent theming and animations
+
+### 📝 Documentation Updates
+- **CLAUDE.md**: Added comprehensive "App Settings System" section with detailed feature documentation
+- **Database Schema**: Updated schema documentation to include new `app_settings` table
+- **Security Documentation**: Added file validation and security measures documentation
+- **UI Structure**: Updated from 4 tabs to 5 sections including the new Settings page
+
+### 🛡️ Security & Validation
+- **File Type Restrictions**: Strict PNG-only validation for both favicon and logo uploads
+- **Size Limits**: 100KB limit for favicons, 1MB limit for logos with proper error handling
+- **Input Validation**: Comprehensive validation for color codes, theme modes, and file uploads
+- **Error Handling**: User-friendly error messages and graceful fallback handling
+
+### ✨ User Experience Enhancements
+- **Seamless Integration**: Settings changes apply immediately without page refreshes
+- **Fallback Handling**: Graceful degradation if custom files are missing or corrupted
+- **Professional Polish**: Consistent styling with existing application theme and design language
+- **Accessibility**: Proper form labels, keyboard navigation, and screen reader support
+
+## [1.0.9] - 2025-06-24 - 🔧 Application-Wide Validation System Overhaul
+
+### ✨ Form Validation Architecture Complete Redesign
+- **Removed ALL HTML5 validation** - Eliminated conflicting browser validation across all forms
+- **Implemented consistent custom JavaScript validation** - All forms now use unified validation pattern
+- **Added `novalidate` attribute** - All forms (`/src/routes/members/+page.svelte`, `/src/routes/plans/+page.svelte`, `/src/routes/memberships/+page.svelte`) prevent browser validation
+- **Real-time error clearing** - Validation errors disappear immediately when user corrects input
+
+### 📝 Members Page Validation (`/src/routes/members/+page.svelte`)
+- **Phone validation fixed** - Now properly validates exactly 10 digits using `/^\d{10}$/` regex
+- **Removed HTML5 attributes** - Eliminated `pattern`, `required`, `maxlength`, `title` attributes
+- **Enhanced error handling** - Added real-time error clearing for all fields
+- **Name validation** - Alphanumeric + spaces only using `/^[a-zA-Z0-9\s]+$/` regex
+- **Email validation** - Optional field with proper email format validation
+
+### 💪 Plans Page Validation (`/src/routes/plans/+page.svelte`)
+- **Added complete validation system** - Previously only had HTML5 validation
+- **Plan name validation** - Required, non-empty string validation
+- **Duration validation** - Positive integer validation using `Number.isInteger()`
+- **Default amount validation** - Optional positive number validation
+- **Error display components** - Added error messages and styling for all fields
+
+### 🏋️ Memberships Page Validation (`/src/routes/memberships/+page.svelte`)
+- **Comprehensive validation for both types** - Group Class and Personal Training memberships
+- **Member selection validation** - Ensures member is selected before submission
+- **Plan selection validation** - Validates plan selection for Group Class memberships
+- **Amount validation** - Positive number validation for both membership types
+- **Sessions validation** - Positive integer validation for PT memberships
+- **Date validation** - Start date validation for Group Class memberships
+
+### 📚 Documentation Updates
+- **CLAUDE.md** - Added complete "Form Validation Architecture" section with implementation patterns and validation rules
+- **CODE_STANDARDS.md** - Added comprehensive "Form Validation Standards" section with code examples and common patterns
+- **Updated project path** - Documented correct project location `/Users/prasanjit/Desktop/kranos-reporter/kranos-gym/`
+
+### 🔧 Technical Improvements
+- **Consistent validation pattern** - All forms use `validateForm(formData)` function with unified error handling
+- **SvelteKit integration** - Proper `use:enhance` integration with client-side validation
+- **State management** - Consistent `formErrors` state management across all forms
+- **Performance optimization** - Removed unnecessary input filtering and browser validation conflicts
+
+### 🎯 User Experience Enhancements
+- **No more validation conflicts** - Eliminated confusing dual validation messages
+- **Immediate feedback** - Errors clear as soon as user provides valid input
+- **Consistent behavior** - All forms behave identically for validation
+- **Better error messages** - Clear, specific validation messages for each field type
+
+## [1.0.8] - 2025-06-24 - 👥 Enhanced Members Page UI & Functionality
+
+### 🎯 Member Management Enhancements
+- **Interactive Member Details Modal**: Click on any member row to view comprehensive membership history
+  - Shows renewal count and total membership statistics
+  - Displays complete membership history sorted by latest first
+  - Includes plan names, dates, amounts, and membership types
+  - Handles both Group Class and Personal Training memberships
+  - Shows "No memberships yet" message for new members
+
+### 🔍 Advanced Filtering & Search
+- **Date Range Filter**: Filter members by join date with from/to date inputs
+- **Status Filter**: Toggle between All Members, Active Only, and Inactive Only
+- **Enhanced Search**: Real-time search across member names, phone numbers, and emails
+- **Clear Filters**: One-click button to reset all filters and search
+- **Responsive Filter Layout**: Mobile-optimized filter controls that stack on smaller screens
+
+### 📱 Phone Number Validation Improvements
+- **Fixed Validation Pattern**: Resolved 10-digit phone number validation issues
+- **Improved Input Handling**: Auto-strips non-numeric characters during input
+- **Better User Feedback**: Enhanced placeholder and validation messages
+- **Input Mode Optimization**: Numeric keyboard on mobile devices
+
+### 🗑️ Delete Member Functionality Fix
+- **Validation Error Resolution**: Fixed validation errors preventing member deletion
+- **Modal Layout Fix**: Resolved issue where validation errors pushed delete button out of modal
+- **Improved Confirmation**: Enhanced delete confirmation with proper error clearing
+- **Better UI Flow**: Separated delete section with proper styling and spacing
+
+### 🎨 UI/UX Improvements
+- **Clickable Row Styling**: Visual feedback with hover effects and cursor changes
+- **Filter Component Design**: Consistent styling with existing dark theme
+- **Responsive Design**: All new components work seamlessly on mobile devices
+- **Loading States**: Proper loading indicators for membership history fetching
+- **Error Handling**: Graceful handling of API errors with user-friendly messages
+
+### 🔗 API & Backend Enhancements
+- **Member Memberships Endpoint**: New `/api/members/[id]/memberships` endpoint
+- **Combined Membership Data**: Fetches both Group Class and PT memberships
+- **Proper Sorting**: Membership history sorted by date (latest first)
+- **Error Handling**: Comprehensive error handling and validation
+
+### 📝 Documentation Updates
+- **README.md**: Updated Member Management section with new interactive features
+- **CLAUDE.md**: Enhanced UI structure documentation with detailed feature descriptions
+- **Feature Documentation**: Complete documentation of all new functionality
+
+### 🧩 Technical Improvements
+- **Component Architecture**: Clean separation with new MemberDetailsModal component
+- **State Management**: Proper state handling for modals and filters
+- **Event Handling**: Improved click handling to prevent modal opening on button clicks
+- **Code Organization**: Well-structured component with clear function separation
+
 ## [1.0.7] - 2025-06-23 - 🔄 Database Schema Modernization
 
 ### 🗄️ Major Database Schema Changes

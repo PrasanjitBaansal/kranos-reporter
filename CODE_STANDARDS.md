@@ -235,6 +235,101 @@ describe('Member Management', () => {
 });
 ```
 
+## Form Validation Standards
+
+### Validation Architecture
+
+- **NO HTML5 validation** - Always add `novalidate` attribute to forms
+- **Custom JavaScript validation only** - Use consistent validation patterns
+- **Client-side validation** - Validate before form submission via SvelteKit's `use:enhance`
+- **Real-time error clearing** - Clear errors when user corrects input
+
+### Validation Function Pattern
+
+```javascript
+function validateForm(formData) {
+    const errors = {};
+    
+    // Field validation
+    const fieldValue = formData.get('field_name');
+    if (!fieldValue || !validationTest(fieldValue)) {
+        errors.field_name = 'Error message';
+    }
+    
+    return errors;
+}
+
+const submitForm = () => {
+    return async ({ formData, result }) => {
+        // Client-side validation
+        const errors = validateForm(formData);
+        if (Object.keys(errors).length > 0) {
+            formErrors = errors;
+            return;
+        }
+        
+        // Proceed with submission
+        isLoading = true;
+        formErrors = {};
+        // Handle result...
+    };
+};
+```
+
+### Error Display Standards
+
+```svelte
+<!-- Input with error styling -->
+<input
+    class="form-control"
+    class:error={formErrors.field_name}
+    on:input={() => {
+        if (formErrors.field_name) {
+            formErrors = { ...formErrors, field_name: '' };
+        }
+    }}
+/>
+
+<!-- Error message display -->
+{#if formErrors.field_name}
+    <span class="error-message">{formErrors.field_name}</span>
+{/if}
+```
+
+### Common Validation Patterns
+
+```javascript
+// Required field
+if (!value || !value.trim()) {
+    errors.field = 'Field is required';
+}
+
+// Phone number (exactly 10 digits)
+if (!phone || !/^\d{10}$/.test(phone)) {
+    errors.phone = 'Phone number must be exactly 10 digits';
+}
+
+// Email (optional)
+if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    errors.email = 'Please enter a valid email address';
+}
+
+// Positive number
+if (!amount || amount <= 0 || isNaN(Number(amount))) {
+    errors.amount = 'Amount must be a positive number';
+}
+
+// Positive integer
+if (!value || value <= 0 || !Number.isInteger(Number(value))) {
+    errors.field = 'Value must be a positive whole number';
+}
+
+// Alphanumeric with spaces
+if (!name || !/^[a-zA-Z0-9\s]+$/.test(name.trim())) {
+    errors.name = 'Name can only contain letters, numbers, and spaces';
+}
+```
+
 ## Documentation Standards
 
 ### Code Comments

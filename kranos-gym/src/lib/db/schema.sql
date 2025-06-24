@@ -42,3 +42,11 @@ CREATE TABLE pt_memberships (
     sessions_remaining INTEGER,
     FOREIGN KEY (member_id) REFERENCES members(id)
 );
+
+CREATE TABLE app_settings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    setting_key TEXT NOT NULL UNIQUE,
+    setting_value TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
