@@ -134,6 +134,25 @@ class Database {
         });
     }
 
+    async hasExistingMemberships(memberId) {
+        await this.ensureConnection();
+        return new Promise((resolve, reject) => {
+            const query = `
+                SELECT 
+                    (SELECT COUNT(*) FROM group_class_memberships WHERE member_id = ?) +
+                    (SELECT COUNT(*) FROM pt_memberships WHERE member_id = ?) as total_memberships
+            `;
+            
+            this.db.get(query, [memberId, memberId], (err, row) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(row.total_memberships > 0);
+                }
+            });
+        });
+    }
+
     async createMember(member) {
         await this.ensureConnection();
         const { name, phone, email, join_date, status = 'Inactive' } = member;

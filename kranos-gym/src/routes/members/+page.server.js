@@ -23,16 +23,20 @@ export const actions = {
             phone: data.get('phone'),
             email: data.get('email') || null,
             join_date: data.get('join_date') || new Date().toISOString().split('T')[0],
-            status: data.get('status') || 'Inactive'
+            status: 'Inactive' // Status is automatically managed
         };
 
         try {
             await db.connect();
             
-            // Check for duplicate phone number
+            // Check for duplicate phone number including deleted members
             const existingMember = await db.getMemberByPhone(member.phone);
             if (existingMember) {
-                return { success: false, error: 'Phone number already exists. Please use a different phone number.' };
+                if (existingMember.status === 'Deleted') {
+                    return { success: false, error: 'This phone number belongs to a deleted member and cannot be reused. Please contact admin if you need to restore this member.' };
+                } else {
+                    return { success: false, error: 'Phone number already exists. Please use a different phone number.' };
+                }
             }
             
             const result = await db.createMember(member);
@@ -52,18 +56,40 @@ export const actions = {
             name: data.get('name'),
             phone: data.get('phone'),
             email: data.get('email') || null,
-            join_date: data.get('join_date'),
-            status: data.get('status') || 'Inactive'
+            join_date: data.get('join_date')
+            // Status is preserved from existing member
         };
 
         try {
             await db.connect();
             
-            // Check for duplicate phone number (excluding current member)
-            const existingMember = await db.getMemberByPhone(member.phone);
-            if (existingMember && existingMember.id !== id) {
-                return { success: false, error: 'Phone number already exists. Please use a different phone number.' };
+            // Get current member data first
+            const currentMember = await db.getMemberById(id);
+            if (!currentMember) {
+                return { success: false, error: 'Member not found.' };
             }
+
+            // Check if phone number is being changed
+            if (member.phone !== currentMember.phone) {
+                // Check if member has existing memberships - if so, don't allow phone change
+                const hasExistingMemberships = await db.hasExistingMemberships(id);
+                if (hasExistingMemberships) {
+                    return { success: false, error: 'Cannot change phone number for members with existing membership history.' };
+                }
+
+                // Check for duplicate phone number (excluding current member)
+                const existingMember = await db.getMemberByPhone(member.phone);
+                if (existingMember && existingMember.id !== id) {
+                    if (existingMember.status === 'Deleted') {
+                        return { success: false, error: 'This phone number belongs to a deleted member and cannot be reused.' };
+                    } else {
+                        return { success: false, error: 'Phone number already exists. Please use a different phone number.' };
+                    }
+                }
+            }
+
+            // Preserve existing status
+            member.status = currentMember.status;
             
             await db.updateMember(id, member);
             return { success: true };

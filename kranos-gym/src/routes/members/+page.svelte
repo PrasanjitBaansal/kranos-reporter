@@ -2,43 +2,102 @@
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
 	import { showSuccess, showError } from '$lib/stores/toast.js';
-	
+	import Modal from '$lib/components/Modal.svelte';
+
 	export let data;
-	export let form;
-	
+	export const form = undefined; // For external reference only
+
 	let selectedMember = null;
 	let isEditing = false;
 	let searchTerm = '';
 	let isLoading = false;
-	
+	let showModal = false;
+	let formErrors = {};
+
 	$: members = data.members || [];
 	$: filteredMembers = members.filter(member => 
-		member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-		member.phone.toString().includes(searchTerm) ||
-		(member.email && member.email.toLowerCase().includes(searchTerm.toLowerCase()))
+		member.status !== 'Deleted' && (
+			member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			member.phone.toString().includes(searchTerm) ||
+			(member.email && member.email.toLowerCase().includes(searchTerm.toLowerCase()))
+		)
 	);
-	
-	function selectMember(member) {
+
+	function editMember(member) {
 		selectedMember = member;
 		isEditing = true;
+		formErrors = {};
+		showModal = true;
 	}
-	
+
 	function newMember() {
 		selectedMember = null;
 		isEditing = false;
+		formErrors = {};
+		showModal = true;
 	}
-	
+
+	function closeModal() {
+		showModal = false;
+		selectedMember = null;
+		isEditing = false;
+		formErrors = {};
+	}
+
+	function validateForm(formData) {
+		const errors = {};
+		const name = formData.get('name');
+		const phone = formData.get('phone');
+		const email = formData.get('email');
+		const joinDate = formData.get('join_date');
+
+		// Name validation (alphanumeric and spaces only)
+		if (!name || !/^[a-zA-Z0-9\s]+$/.test(name.trim())) {
+			errors.name = 'Name can only contain letters, numbers, and spaces';
+		}
+
+		// Phone validation (exactly 10 digits)
+		if (!phone || !/^\d{10}$/.test(phone.trim())) {
+			errors.phone = 'Phone number must be exactly 10 digits';
+		}
+
+		// Email validation (if provided)
+		if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+			errors.email = 'Please enter a valid email address';
+		}
+
+		// Join date validation
+		if (!joinDate) {
+			errors.join_date = 'Join date is required';
+		}
+
+		return errors;
+	}
+
 	const submitForm = () => {
-		isLoading = true;
-		return async ({ result }) => {
-			isLoading = false;
+		return async ({ formData, result }) => {
+			// Client-side validation
+			const errors = validateForm(formData);
+			if (Object.keys(errors).length > 0) {
+				formErrors = errors;
+				return;
+			}
+
+			isLoading = true;
+			formErrors = {};
+
 			if (result.type === 'success') {
 				showSuccess(isEditing ? 'Member updated successfully!' : 'Member created successfully!');
-				newMember();
+				closeModal();
 				await invalidateAll();
 			} else if (result.type === 'failure') {
-				showError(form?.error || 'Failed to save member. Please try again.');
+				if (result.data?.error) {
+					showError(result.data.error);
+				} else {
+					showError('Failed to save member. Please try again.');
+				}
 			}
+			isLoading = false;
 		};
 	};
 </script>
@@ -63,7 +122,6 @@
 			</button>
 		</div>
 	</div>
-
 
 	<div class="members-content">
 		<div class="members-list card animate-slide-up">
@@ -92,164 +150,176 @@
 						<p>Start by adding your first member</p>
 					</div>
 				{:else}
-					<div class="members-table">
-						{#each filteredMembers as member}
-							<div 
-								class="member-row" 
-								class:selected={selectedMember?.id === member.id}
-								on:click={() => selectMember(member)}
-							>
-								<div class="member-info">
-									<div class="member-name">
+					<table class="members-table">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Phone</th>
+								<th>Email</th>
+								<th>Join Date</th>
+								<th>Status</th>
+								<th>Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each filteredMembers as member}
+								<tr class="member-row">
+									<td class="member-name">
 										{member.name}
-										{#if member.status === 'Inactive'}
+									</td>
+									<td class="member-phone">
+										{member.phone}
+									</td>
+									<td class="member-email">
+										{member.email || '-'}
+									</td>
+									<td class="member-join-date">
+										{member.join_date}
+									</td>
+									<td class="member-status">
+										{#if member.status === 'Active'}
+											<span class="status-badge active">Active</span>
+										{:else}
 											<span class="status-badge inactive">Inactive</span>
-										{:else if member.status === 'Deleted'}
-											<span class="status-badge deleted">Deleted</span>
 										{/if}
-									</div>
-									<div class="member-contact">
-										<span class="phone">📞 {member.phone}</span>
-										{#if member.email}
-											<span class="email">✉️ {member.email}</span>
-										{/if}
-									</div>
-									<div class="member-meta">
-										<span class="join-date">Joined: {member.join_date}</span>
-									</div>
-								</div>
-								<div class="member-actions">
-									<button 
-										class="btn btn-secondary btn-sm"
-										on:click|stopPropagation={() => selectMember(member)}
-									>
-										Edit
-									</button>
-								</div>
-							</div>
-						{/each}
-					</div>
+									</td>
+									<td class="member-actions">
+										<button 
+											class="btn btn-secondary btn-sm"
+											on:click={() => editMember(member)}
+										>
+											✏️ Edit
+										</button>
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
 				{/if}
 			</div>
-		</div>
-
-		<div class="member-form card animate-slide-up">
-			<div class="card-header">
-				<h2>
-					<span class="section-icon">{isEditing ? '✏️' : '➕'}</span>
-					{isEditing ? 'Edit Member' : 'Add New Member'}
-				</h2>
-				{#if isEditing}
-					<button class="btn btn-secondary" on:click={newMember}>
-						Add New
-					</button>
-				{/if}
-			</div>
-
-			<form 
-				method="post" 
-				action={isEditing ? '?/update' : '?/create'}
-				use:enhance={submitForm}
-				class="member-form-content"
-			>
-				{#if isEditing}
-					<input type="hidden" name="id" value={selectedMember?.id} />
-				{/if}
-
-				<div class="form-group">
-					<label for="name" class="form-label">Full Name *</label>
-					<input
-						type="text"
-						id="name"
-						name="name"
-						value={selectedMember?.name || ''}
-						class="form-control"
-						required
-						placeholder="Enter full name"
-					/>
-				</div>
-
-				<div class="form-group">
-					<label for="phone" class="form-label">Phone Number *</label>
-					<input
-						type="tel"
-						id="phone"
-						name="phone"
-						value={selectedMember?.phone || ''}
-						class="form-control"
-						required
-						placeholder="Enter phone number"
-					/>
-				</div>
-
-				<div class="form-group">
-					<label for="email" class="form-label">Email Address</label>
-					<input
-						type="email"
-						id="email"
-						name="email"
-						value={selectedMember?.email || ''}
-						class="form-control"
-						placeholder="Enter email address"
-					/>
-				</div>
-
-				<div class="form-group">
-					<label for="join_date" class="form-label">Join Date</label>
-					<input
-						type="date"
-						id="join_date"
-						name="join_date"
-						value={selectedMember?.join_date || new Date().toISOString().split('T')[0]}
-						class="form-control"
-					/>
-				</div>
-
-				<div class="form-group">
-					<label for="status" class="form-label">Status</label>
-					<select
-						id="status"
-						name="status"
-						value={selectedMember?.status || 'Active'}
-						class="form-control"
-					>
-						<option value="Active">Active</option>
-						<option value="Inactive">Inactive</option>
-						<option value="Deleted">Deleted</option>
-					</select>
-				</div>
-
-				<div class="form-actions">
-					<button 
-						type="submit" 
-						class="btn btn-primary"
-						disabled={isLoading}
-					>
-						{#if isLoading}
-							<span class="loading-spinner"></span>
-						{/if}
-						<span class="btn-icon">{isEditing ? '💾' : '➕'}</span>
-						{isEditing ? 'Update Member' : 'Save Member'}
-					</button>
-				</div>
-			</form>
-			
-			{#if isEditing}
-				<form method="post" action="?/delete" use:enhance={submitForm} class="delete-form">
-					<input type="hidden" name="id" value={selectedMember?.id} />
-					<button 
-						type="submit" 
-						class="btn btn-danger"
-						on:click={() => confirm('Are you sure you want to delete this member?')}
-					>
-						<span class="btn-icon">🗑️</span>
-						Delete Member
-					</button>
-				</form>
-			{/if}
 		</div>
 	</div>
 </div>
+
+<!-- Member Modal -->
+<Modal bind:show={showModal} title={isEditing ? 'Edit Member' : 'Add New Member'} on:close={closeModal}>
+	<form 
+		method="post" 
+		action={isEditing ? '?/update' : '?/create'}
+		use:enhance={submitForm}
+		class="member-form-content"
+	>
+		{#if isEditing}
+			<input type="hidden" name="id" value={selectedMember?.id} />
+		{/if}
+
+		<div class="form-group">
+			<label for="name" class="form-label">Full Name *</label>
+			<input
+				type="text"
+				id="name"
+				name="name"
+				value={selectedMember?.name || ''}
+				class="form-control"
+				class:error={formErrors.name}
+				required
+				pattern="[a-zA-Z0-9\s]+"
+				placeholder="Enter full name (letters, numbers, spaces only)"
+			/>
+			{#if formErrors.name}
+				<span class="error-message">{formErrors.name}</span>
+			{/if}
+		</div>
+
+		<div class="form-group">
+			<label for="phone" class="form-label">Phone Number *</label>
+			<input
+				type="tel"
+				id="phone"
+				name="phone"
+				value={selectedMember?.phone || ''}
+				class="form-control"
+				class:error={formErrors.phone}
+				required
+				pattern="\d{10}"
+				maxlength="10"
+				placeholder="Enter 10-digit phone number"
+			/>
+			{#if formErrors.phone}
+				<span class="error-message">{formErrors.phone}</span>
+			{/if}
+		</div>
+
+		<div class="form-group">
+			<label for="email" class="form-label">Email Address</label>
+			<input
+				type="email"
+				id="email"
+				name="email"
+				value={selectedMember?.email || ''}
+				class="form-control"
+				class:error={formErrors.email}
+				placeholder="Enter email address"
+			/>
+			{#if formErrors.email}
+				<span class="error-message">{formErrors.email}</span>
+			{/if}
+		</div>
+
+		<div class="form-group">
+			<label for="join_date" class="form-label">Join Date *</label>
+			<input
+				type="date"
+				id="join_date"
+				name="join_date"
+				value={selectedMember?.join_date || new Date().toISOString().split('T')[0]}
+				class="form-control"
+				class:error={formErrors.join_date}
+				required
+			/>
+			{#if formErrors.join_date}
+				<span class="error-message">{formErrors.join_date}</span>
+			{/if}
+		</div>
+
+		<div class="form-actions">
+			<button 
+				type="button" 
+				class="btn btn-secondary"
+				on:click={closeModal}
+				disabled={isLoading}
+			>
+				Cancel
+			</button>
+			<button 
+				type="submit" 
+				class="btn btn-primary"
+				disabled={isLoading}
+			>
+				{#if isLoading}
+					<span class="loading-spinner"></span>
+				{/if}
+				<span class="btn-icon">{isEditing ? '💾' : '➕'}</span>
+				{isEditing ? 'Update Member' : 'Save Member'}
+			</button>
+		</div>
+	</form>
+	
+	{#if isEditing}
+		<form method="post" action="?/delete" use:enhance={submitForm} class="delete-form">
+			<input type="hidden" name="id" value={selectedMember?.id} />
+			<button 
+				type="submit" 
+				class="btn btn-danger"
+				on:click={() => confirm('Are you sure you want to delete this member?')}
+				disabled={isLoading}
+			>
+				<span class="btn-icon">🗑️</span>
+				Delete Member
+			</button>
+		</form>
+	{/if}
+</Modal>
 
 <style>
 	.members-page {
@@ -295,37 +365,8 @@
 		animation-delay: 0.3s;
 	}
 
-	.alert {
-		padding: 1rem;
-		border-radius: 8px;
-		margin-bottom: 1.5rem;
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		font-weight: 500;
-		animation-delay: 0.4s;
-	}
-
-	.alert-success {
-		background: rgba(74, 222, 128, 0.2);
-		border: 1px solid var(--success);
-		color: var(--success);
-	}
-
-	.alert-error {
-		background: rgba(239, 68, 68, 0.2);
-		border: 1px solid var(--error);
-		color: var(--error);
-	}
-
-	.alert-icon {
-		font-size: 1.2rem;
-	}
-
 	.members-content {
-		display: grid;
-		grid-template-columns: 1fr 400px;
-		gap: 2rem;
+		display: block;
 		animation-delay: 0.5s;
 	}
 
@@ -414,46 +455,51 @@
 	}
 
 	.members-table {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
+		width: 100%;
+		border-collapse: collapse;
+		margin-top: 1rem;
+	}
+
+	.members-table th,
+	.members-table td {
+		padding: 1rem;
+		text-align: left;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.members-table th {
+		background: var(--gradient-glow);
+		font-weight: 600;
+		color: var(--text);
+		position: sticky;
+		top: 0;
+		z-index: 10;
 	}
 
 	.member-row {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 1rem;
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		cursor: pointer;
 		transition: var(--transition-fast);
-		background: var(--surface);
 	}
 
 	.member-row:hover {
-		border-color: var(--primary);
 		background: var(--gradient-glow);
-		transform: translateY(-1px);
-	}
-
-	.member-row.selected {
-		border-color: var(--primary);
-		background: var(--gradient-glow);
-		box-shadow: 0 0 15px rgba(243, 148, 7, 0.2);
-	}
-
-	.member-info {
-		flex: 1;
 	}
 
 	.member-name {
 		font-weight: 600;
-		font-size: 1.1rem;
-		margin-bottom: 0.25rem;
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
+		color: var(--text);
+	}
+
+	.member-phone {
+		font-family: monospace;
+		color: var(--text-muted);
+	}
+
+	.member-email {
+		color: var(--text-muted);
+	}
+
+	.member-join-date {
+		color: var(--text-muted);
 	}
 
 	.status-badge {
@@ -463,40 +509,20 @@
 		font-weight: 500;
 	}
 
+	.status-badge.active {
+		background: rgba(74, 222, 128, 0.2);
+		color: var(--success);
+		border: 1px solid var(--success);
+	}
+
 	.status-badge.inactive {
 		background: rgba(239, 68, 68, 0.2);
 		color: var(--error);
 		border: 1px solid var(--error);
 	}
 
-	.status-badge.deleted {
-		background: rgba(156, 163, 175, 0.2);
-		color: #9CA3AF;
-		border: 1px solid #9CA3AF;
-	}
-
-	.member-contact {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-		margin-bottom: 0.25rem;
-	}
-
-	.phone, .email {
-		font-size: 0.9rem;
-		color: var(--text-muted);
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-	}
-
-	.member-meta {
-		font-size: 0.85rem;
-		color: var(--text-muted);
-	}
-
 	.member-actions {
-		margin-left: 1rem;
+		text-align: center;
 	}
 
 	.btn-sm {
@@ -522,28 +548,38 @@
 		font-size: 0.9rem;
 	}
 
-	.checkbox-label {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		cursor: pointer;
-		font-weight: 500;
-	}
-
-	.form-checkbox {
-		width: 18px;
-		height: 18px;
-		accent-color: var(--primary);
-	}
-
-	.checkbox-text {
+	.form-control {
+		padding: 0.75rem;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		background: var(--surface);
 		color: var(--text);
+		font-size: 0.9rem;
+		transition: var(--transition-fast);
+	}
+
+	.form-control:focus {
+		outline: none;
+		border-color: var(--primary);
+		box-shadow: 0 0 0 3px rgba(243, 148, 7, 0.2);
+	}
+
+	.form-control.error {
+		border-color: var(--error);
+		box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+	}
+
+	.error-message {
+		color: var(--error);
+		font-size: 0.8rem;
+		margin-top: 0.25rem;
 	}
 
 	.form-actions {
 		display: flex;
 		gap: 1rem;
-		flex-wrap: wrap;
+		justify-content: flex-end;
+		margin-top: 1rem;
 	}
 
 	.btn-icon {
@@ -571,8 +607,12 @@
 	}
 
 	@media (max-width: 768px) {
-		.members-content {
-			grid-template-columns: 1fr;
+		.members-table-container {
+			overflow-x: auto;
+		}
+
+		.members-table {
+			min-width: 600px;
 		}
 
 		.page-header {
@@ -586,17 +626,6 @@
 		}
 
 		.search-container {
-			width: 100%;
-		}
-
-		.member-row {
-			flex-direction: column;
-			align-items: flex-start;
-			gap: 1rem;
-		}
-
-		.member-actions {
-			margin-left: 0;
 			width: 100%;
 		}
 

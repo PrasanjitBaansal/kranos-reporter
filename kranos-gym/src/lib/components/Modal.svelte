@@ -1,0 +1,171 @@
+<script>
+	import { createEventDispatcher } from 'svelte';
+	
+	export let show = false;
+	export let title = '';
+	export let size = 'medium'; // small, medium, large
+	
+	const dispatch = createEventDispatcher();
+	
+	function closeModal() {
+		show = false;
+		dispatch('close');
+	}
+	
+	function handleKeydown(event) {
+		if (event.key === 'Escape') {
+			closeModal();
+		}
+	}
+	
+	function handleBackdropClick(event) {
+		if (event.target === event.currentTarget) {
+			closeModal();
+		}
+	}
+</script>
+
+<svelte:window on:keydown={handleKeydown} />
+
+{#if show}
+	<div class="modal-backdrop" on:click={handleBackdropClick} on:keydown role="dialog" aria-modal="true">
+		<div class="modal modal-{size}" class:modal-show={show}>
+			<div class="modal-header">
+				<h2 class="modal-title">{title}</h2>
+				<button class="modal-close" on:click={closeModal}>×</button>
+			</div>
+			<div class="modal-body">
+				<slot />
+			</div>
+		</div>
+	</div>
+{/if}
+
+<style>
+	.modal-backdrop {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: rgba(0, 0, 0, 0.6);
+		backdrop-filter: blur(4px);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 1000;
+		animation: fadeIn 0.2s ease-out;
+	}
+
+	.modal {
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		box-shadow: var(--shadow-large);
+		max-height: 90vh;
+		overflow: hidden;
+		animation: slideUp 0.3s ease-out;
+	}
+
+	.modal-small {
+		width: 90%;
+		max-width: 400px;
+	}
+
+	.modal-medium {
+		width: 90%;
+		max-width: 600px;
+	}
+
+	.modal-large {
+		width: 90%;
+		max-width: 800px;
+	}
+
+	.modal-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 1.5rem 2rem;
+		border-bottom: 1px solid var(--border);
+		background: var(--gradient-glow);
+	}
+
+	.modal-title {
+		font-size: 1.5rem;
+		font-weight: 600;
+		margin: 0;
+		color: var(--text);
+	}
+
+	.modal-close {
+		background: none;
+		border: none;
+		font-size: 2rem;
+		font-weight: 300;
+		color: var(--text-muted);
+		cursor: pointer;
+		padding: 0.25rem;
+		border-radius: 4px;
+		transition: var(--transition-fast);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		line-height: 1;
+	}
+
+	.modal-close:hover {
+		background: rgba(239, 68, 68, 0.1);
+		color: var(--error);
+	}
+
+	.modal-body {
+		padding: 2rem;
+		overflow-y: auto;
+		max-height: calc(90vh - 100px);
+	}
+
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
+	@keyframes slideUp {
+		from {
+			opacity: 0;
+			transform: translateY(50px) scale(0.95);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0) scale(1);
+		}
+	}
+
+	@media (max-width: 768px) {
+		.modal-small,
+		.modal-medium,
+		.modal-large {
+			width: 95%;
+			max-width: none;
+			margin: 1rem;
+		}
+
+		.modal-header {
+			padding: 1rem 1.5rem;
+		}
+
+		.modal-title {
+			font-size: 1.25rem;
+		}
+
+		.modal-body {
+			padding: 1.5rem;
+		}
+	}
+</style>
