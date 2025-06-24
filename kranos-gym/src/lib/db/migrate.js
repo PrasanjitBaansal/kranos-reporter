@@ -237,11 +237,17 @@ function calculatePlanDefaultAmounts(gcData) {
         const planKey = `${planName}-${durationDays}`;
         
         if (!planAmounts.has(planKey)) {
-            planAmounts.set(planKey, parseFloat(row['Amount']) || 0);
+            // Try different possible column names for Amount
+            const amount = row[' Amount '] || row['Amount'] || row['Amount '] || row[' Amount'] || 0;
+            planAmounts.set(planKey, parseFloat(amount) || 0);
         }
     });
     
     console.log(`✓ Calculated default amounts for ${planAmounts.size} unique plans`);
+    console.log('Plan amounts calculated:');
+    for (const [planKey, amount] of planAmounts.entries()) {
+        console.log(`  ${planKey}: ₹${amount}`);
+    }
     return planAmounts;
 }
 
@@ -372,12 +378,15 @@ export function migrateFromExcel(excelPath = '../static/data/Kranos MMA Members.
             const membershipKey = `${phone}-${planName}-${startDate}`;
             const membershipType = membershipTypes.get(membershipKey) || 'New';
             
+            // Try different possible column names for Amount
+            const amount = row[' Amount '] || row['Amount'] || row['Amount '] || row[' Amount'] || 0;
+            
             insertGCMembership.run(
                 member.id,
                 plan.id,
                 startDate,
                 calculatedEndDate,
-                parseFloat(row['Amount']) || 0,
+                parseFloat(amount) || 0,
                 excelDateToString(row['Payment Date']),
                 membershipType
             );

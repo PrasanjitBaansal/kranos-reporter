@@ -60,21 +60,5 @@ export const actions = {
         } finally {
             await db.close();
         }
-    },
-
-    delete: async ({ request }) => {
-        const db = new Database();
-        const data = await request.formData();
-        const id = parseInt(data.get('id'));
-
-        try {
-            await db.connect();
-            await db.deleteGroupPlan(id);
-            return { success: true };
-        } catch (error) {
-            return { success: false, error: error.message };
-        } finally {
-            await db.close();
-        }
     }
 };

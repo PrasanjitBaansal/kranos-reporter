@@ -13,7 +13,7 @@ CREATE TABLE group_plans (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     duration_days INTEGER NOT NULL,
-    default_amount REAL NOT NULL,
+    default_amount REAL,
     display_name TEXT UNIQUE,
     status TEXT NOT NULL DEFAULT 'Active' CHECK (status IN ('Active', 'Inactive', 'Deleted'))
 );

@@ -848,11 +848,11 @@
 
 	@media (max-width: 768px) {
 		.members-table-container {
-			overflow-x: auto;
+			/* Removed overflow-x: auto to prevent horizontal scroll */
 		}
 
 		.members-table {
-			min-width: 600px;
+			/* Removed min-width to allow table to fit page width */
 		}
 
 		.page-header {
