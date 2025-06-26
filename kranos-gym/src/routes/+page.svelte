@@ -25,6 +25,7 @@
 		try {
 			// Calculate stats from actual data
 			const activeMembers = data.members.filter(m => m.status === 'Active').length;
+			const newMembers = data.members.filter(m => m.status === 'New').length;
 			const totalMembers = data.members.length;
 			
 			// Calculate monthly revenue from current month memberships
@@ -54,6 +55,7 @@
 			stats = {
 				totalMembers,
 				activeMembers,
+				newMembers,
 				monthlyRevenue,
 				expiringSoon
 			};
@@ -216,6 +218,18 @@
 				<div class="stat-trend positive">
 					<span class="trend-icon">📈</span>
 					{Math.round((stats.activeMembers / stats.totalMembers) * 100)}% active
+				</div>
+			</div>
+			
+			<div class="stat-card new-members">
+				<div class="stat-header">
+					<span class="stat-icon">🆕</span>
+					<h3>New Members</h3>
+				</div>
+				<div class="stat-value">{stats.newMembers}</div>
+				<div class="stat-trend">
+					<span class="trend-icon">👤</span>
+					{stats.newMembers > 0 ? `${Math.round((stats.newMembers / stats.totalMembers) * 100)}% new` : 'No new members'}
 				</div>
 			</div>
 			
@@ -611,55 +625,6 @@
 		font-size: 0.9rem;
 	}
 	
-	.dashboard-footer {
-		animation-delay: 0.6s;
-	}
-	
-	.footer-card {
-		background: var(--gradient-dark);
-		border: 1px solid var(--border);
-		border-radius: 16px;
-		padding: 2rem;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		position: relative;
-		overflow: hidden;
-	}
-	
-	.footer-card::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: var(--gradient-glow);
-		opacity: 0.1;
-		z-index: -1;
-	}
-	
-	.footer-content h3 {
-		margin: 0 0 0.5rem 0;
-		font-size: 1.5rem;
-		color: var(--text);
-	}
-	
-	.footer-content p {
-		margin: 0 0 1.5rem 0;
-		color: var(--text-muted);
-	}
-	
-	.footer-actions {
-		display: flex;
-		gap: 1rem;
-	}
-	
-	.footer-illustration {
-		font-size: 4rem;
-		opacity: 0.8;
-		filter: drop-shadow(0 0 20px var(--primary));
-	}
 	
 	@media (max-width: 768px) {
 		.dashboard {

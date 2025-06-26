@@ -113,7 +113,18 @@ export const actions = {
 
         try {
             await db.connect();
+            
+            // Get membership details before deleting to update member status
+            const membership = await db.getGroupClassMembershipById(id);
+            const memberId = membership?.member_id;
+            
             await db.deleteGroupClassMembership(id);
+            
+            // Update member status after deleting membership
+            if (memberId) {
+                await db.updateMemberStatus(memberId);
+            }
+            
             return { success: true, type: 'gc' };
         } catch (error) {
             return { success: false, error: error.message, type: 'gc' };
@@ -139,6 +150,10 @@ export const actions = {
         try {
             await db.connect();
             const result = await db.createPTMembership(membership);
+            
+            // Update member status after creating PT membership
+            await db.updateMemberStatus(membership.member_id);
+            
             return { success: true, membership: result, type: 'pt' };
         } catch (error) {
             return { success: false, error: error.message, type: 'pt' };
@@ -163,6 +178,10 @@ export const actions = {
         try {
             await db.connect();
             await db.updatePTMembership(id, membership);
+            
+            // Update member status after updating PT membership
+            await db.updateMemberStatus(membership.member_id);
+            
             return { success: true, type: 'pt' };
         } catch (error) {
             return { success: false, error: error.message, type: 'pt' };
@@ -178,10 +197,37 @@ export const actions = {
 
         try {
             await db.connect();
+            
+            // Get membership details before deleting to update member status
+            const membership = await db.getPTMembershipById(id);
+            const memberId = membership?.member_id;
+            
             await db.deletePTMembership(id);
+            
+            // Update member status after deleting PT membership
+            if (memberId) {
+                await db.updateMemberStatus(memberId);
+            }
+            
             return { success: true, type: 'pt' };
         } catch (error) {
             return { success: false, error: error.message, type: 'pt' };
+        } finally {
+            await db.close();
+        }
+    },
+
+    getMemberHistory: async ({ request }) => {
+        const data = await request.formData();
+        const memberId = parseInt(data.get('member_id'));
+        const db = new Database();
+
+        try {
+            await db.connect();
+            const history = await db.getGroupClassMembershipsByMemberId(memberId);
+            return { success: true, history };
+        } catch (error) {
+            return { success: false, error: error.message };
         } finally {
             await db.close();
         }

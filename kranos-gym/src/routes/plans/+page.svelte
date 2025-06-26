@@ -381,32 +381,6 @@
 		animation-delay: 0.3s;
 	}
 
-	.alert {
-		padding: 1rem;
-		border-radius: 8px;
-		margin-bottom: 1.5rem;
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		font-weight: 500;
-		animation-delay: 0.4s;
-	}
-
-	.alert-success {
-		background: rgba(74, 222, 128, 0.2);
-		border: 1px solid var(--success);
-		color: var(--success);
-	}
-
-	.alert-error {
-		background: rgba(239, 68, 68, 0.2);
-		border: 1px solid var(--error);
-		color: var(--error);
-	}
-
-	.alert-icon {
-		font-size: 1.2rem;
-	}
 
 	.plans-content {
 		display: block;
@@ -570,11 +544,6 @@
 		border: 1px solid var(--error);
 	}
 
-	.status-badge.deleted {
-		background: rgba(156, 163, 175, 0.2);
-		color: #9CA3AF;
-		border: 1px solid #9CA3AF;
-	}
 
 
 	.btn-sm {
@@ -620,23 +589,6 @@
 		opacity: 0.7;
 	}
 
-	.checkbox-label {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		cursor: pointer;
-		font-weight: 500;
-	}
-
-	.form-checkbox {
-		width: 18px;
-		height: 18px;
-		accent-color: var(--primary);
-	}
-
-	.checkbox-text {
-		color: var(--text);
-	}
 
 	.form-actions {
 		display: flex;

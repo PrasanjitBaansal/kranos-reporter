@@ -28,7 +28,7 @@
 <svelte:window on:keydown={handleKeydown} />
 
 {#if show}
-	<div class="modal-backdrop" on:click={handleBackdropClick} on:keydown role="dialog" aria-modal="true">
+	<div class="modal-backdrop" on:click={handleBackdropClick} on:keydown role="dialog" aria-modal="true" tabindex="-1">
 		<div class="modal modal-{size}" class:modal-show={show}>
 			<div class="modal-header">
 				<h2 class="modal-title">{title}</h2>

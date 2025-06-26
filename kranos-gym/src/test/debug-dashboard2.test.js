@@ -36,7 +36,7 @@ describe('Dashboard Data Processing Debug', () => {
 		
 		console.log('Data processing test:');
 		console.log('Members count:', data.members.length);
-		console.log('Active members:', data.members.filter(m => m.is_active).length);
+		console.log('Active members:', data.members.filter(m => m.status === 'Active').length);
 		console.log('GC memberships:', data.groupClassMemberships.length);
 		console.log('PT memberships:', data.ptMemberships.length);
 		

@@ -4,6 +4,211 @@ All notable changes to the Kranos Gym Management System will be documented in th
 
 ## [Unreleased]
 
+## [1.0.17] - 2025-06-26 - 📊 Enhanced Membership History Display
+
+### 🎯 New Features
+- **Table-Based History View**: Replaced card-based membership history with proper table format for better data readability
+- **Total Amount Paid**: Prominently displays total amount paid by member at the top of the membership summary
+- **Comprehensive Membership Data**: Shows plan name, type (Group Class/Personal Training), duration, dates, and amount in organized columns
+- **Enhanced Type Display**: Clear distinction between Group Class and Personal Training memberships with color-coded badges
+
+### 🔧 Bug Fixes
+- **Empty History Issue**: Fixed membership history modal showing empty data by ensuring proper data loading and display
+- **Data Calculation**: Fixed total amount calculation to properly sum all membership payments
+
+### 🎨 UI/UX Enhancements
+- **Responsive Table**: Mobile-friendly table design with horizontal scrolling on smaller screens
+- **Better Typography**: Improved font sizes and spacing for better readability
+- **Sticky Headers**: Table headers remain visible when scrolling through long membership histories
+- **Visual Hierarchy**: Clear separation between total amount, membership count, and detailed history table
+
+## [1.0.16] - 2025-06-26 - 🚀 Advanced Membership Features & Dynamic Status
+
+### 🎯 New Features
+- **Membership History Modal**: Clickable renewal badges now open detailed membership history modal
+- **Dynamic Status Calculation**: Membership status now calculated in real-time based on current date vs start/end dates
+- **Interactive Renewal Tags**: Renewal badges are now clickable buttons with hover effects and visual feedback
+- **Total Amount Tracking**: History modal displays total amount paid and membership count at the top
+
+### 🔧 Bug Fixes
+- **Search Functionality**: Fixed member search dropdown that was only working for the first character
+- **Status Accuracy**: Replaced static status display with dynamic calculation for accurate membership status
+- **History Data**: Fixed membership history query to include all required fields (plan base name, duration)
+
+### 🎨 UI/UX Enhancements
+- **Clickable Badge Design**: Renewal badges styled as buttons with hover states and visual cues
+- **History Modal**: Professional table layout showing complete membership history with plan details
+- **Summary Cards**: Added summary cards showing total amount paid and membership count
+- **Loading States**: Added loading indicators for membership history fetching
+- **Responsive Design**: History modal adapts to various screen sizes with scrollable content
+
+## [1.0.15] - 2025-06-25 - 🔄 Memberships Table Enhancement & Edit Functionality
+
+### 🎨 Major UI/UX Improvements
+- **Group Class Table Restructure**: Separated plan name and duration into distinct columns for better clarity
+- **Phone Column**: Added member phone as second column in both Group Class and Personal Training tables
+- **Personal Training Table**: Converted from card layout to professional table format matching Group Class
+- **Font Size Optimization**: Reduced font sizes across application for cleaner, more compact display
+- **Button Sizing**: Optimized edit and delete button sizes for better table layout
+
+### ⚡ Enhanced Functionality
+- **Edit Membership**: Complete edit functionality for both Group Class and Personal Training memberships
+- **Modal Edit Mode**: Dynamic modal title and submit button text for create vs edit operations
+- **Session Display**: Simplified Personal Training to show only total sessions (removed progress tracking)
+- **Search Enhancement**: Improved member search to include phone number matching and better responsiveness
+
+### 🔧 Technical Improvements
+- **Database Query Enhancement**: Updated Group Class queries to include plan base name and duration days
+- **Form State Management**: Enhanced form handling for edit mode with proper data population
+- **Server Actions**: Utilized existing updateGC and updatePT server actions for edit functionality
+- **Reactive Variables**: Better form binding with proper reactive state management
+
+### 📊 Table & Layout Improvements
+- **Compact Design**: Reduced padding and font sizes for tables (14px base font size)
+- **Status Badge Optimization**: Smaller, more compact status indicators
+- **Action Buttons**: Smaller edit (✏️) and delete (🗑️) buttons with proper spacing
+- **Responsive Tables**: Both membership types now use consistent table layouts
+
+### 🎯 User Experience Enhancements
+- **Consistent Interface**: Unified table design across Group Class and Personal Training
+- **Better Data Visibility**: Separated plan information for easier reading
+- **Edit Workflow**: Seamless edit experience with pre-populated form data
+- **Search Functionality**: Enhanced member search supports partial name and phone matching
+
+### 📱 Mobile Responsiveness
+- **Table Scaling**: Improved table display on smaller screens
+- **Compact Actions**: Optimized button layout for mobile devices
+- **Responsive Typography**: Appropriate font scaling across devices
+
+## [1.0.14] - 2025-06-25 - 🧹 Error Cleanup & Accessibility Improvements
+
+### 🐛 Critical Bug Fixes
+- **Fixed Svelte Binding Error**: Resolved "Can only bind to an Identifier or MemberExpression" error in memberships page
+- **Form Input Binding**: Fixed invalid ternary operator binding for amount_paid input field
+- **Toggle Switch Binding**: Added proper reactive variable (`isPersonalTraining`) for checkbox binding
+- **Amount Change Handling**: Implemented `handleAmountChange()` function for proper form state management
+
+### ♿ Accessibility Enhancements
+- **Modal Accessibility**: Added `tabindex="-1"` to modal dialog element for proper keyboard navigation
+- **Form Labels**: Fixed unassociated form labels in members page filter section
+- **Date Range Inputs**: Added proper `id` and `for` attributes for date filter inputs
+- **Status Filter**: Added proper label association for status select dropdown
+- **Search Input**: Added screen reader-only label for search input with `.sr-only` class
+- **Removed Autofocus**: Eliminated autofocus attribute from PasswordModal to improve accessibility
+
+### 🧹 Code Quality Improvements
+- **CSS Cleanup**: Removed 26 unused CSS selectors across dashboard, plans, and memberships pages
+- **Dashboard CSS**: Eliminated unused footer-related CSS rules (dashboard-footer, footer-card, etc.)
+- **Plans Page CSS**: Removed unused alert and checkbox CSS classes
+- **Memberships CSS**: Cleaned up obsolete grid-based member/plan card CSS and form section styles
+- **Build Warnings**: Eliminated all Svelte build warnings for unused CSS selectors
+
+### 🔧 Technical Improvements
+- **Reactive Variables**: Added proper reactive variables for form binding compatibility
+- **Form State Management**: Enhanced form input handling with dedicated change handlers
+- **CSS Organization**: Improved CSS structure by removing legacy code from previous implementations
+- **Development Experience**: Cleaner build process with no warning messages
+
+### 📊 Impact Summary
+- **Zero Build Warnings**: Eliminated all Svelte compilation warnings
+- **Improved Accessibility**: Full compliance with form labeling best practices
+- **Reduced Bundle Size**: Removed ~150 lines of unused CSS across multiple pages
+- **Better UX**: Proper keyboard navigation and screen reader support
+
+## [1.0.13] - 2025-06-25 - 🔄 Complete Memberships Page UI Redesign
+
+### 🎨 Major UI/UX Improvements
+- **Toggle Switch**: Replaced button-based membership type selector with clean toggle switch (Group Classes ↔ Personal Training)
+- **Table Layout**: Converted Group Classes from card layout to professional table format with columns for Member, Plan, Dates, Amount, Type, Status, and Actions
+- **Plan Filter**: Added plan name filter dropdown above Group Classes table for easier navigation
+- **Modal Form**: Moved membership creation form from side panel to modal dialog for better space utilization
+
+### ⚡ Enhanced User Experience
+- **Searchable Member Selection**: Replaced member grid with searchable text input with dropdown suggestions
+- **Split Plan Selection**: Separated plan selection into two dropdowns (Plan Name + Duration) for better usability
+- **Auto-Calculation**: Membership type (New/Renewal) now auto-calculates based on member's history
+- **Smart Sorting**: Table automatically sorts by Start Date (descending) for latest memberships first
+
+### 🎯 Form & Interaction Improvements
+- **Responsive Design**: Better mobile experience with collapsible filters and adaptive layouts
+- **Real-time Validation**: Enhanced form validation with immediate error clearing
+- **Single Column Layout**: Optimized page layout for better content focus
+- **Improved Accessibility**: Better keyboard navigation and screen reader support
+
+## [1.0.12] - 2025-06-25 - 🆕 Added "New" Member Status for Enhanced Lifecycle Tracking
+
+### ✨ New Member Status Implementation
+- **"New" Member Status**: Added dedicated status for members with no memberships (neither Group Class nor Personal Training)
+- **Improved Business Logic**: Better distinction between new prospects vs. expired members
+- **Four-State Status System**: Active (has active memberships), Inactive (expired memberships), New (no memberships), Deleted (soft-deleted)
+
+### 🔧 Database & Logic Enhancements  
+- **Enhanced Status Calculation**: Updated `updateMemberStatus()` function to check for zero memberships first using `hasExistingMemberships()`
+- **Schema Update**: Modified members table CHECK constraint to include 'New' as valid status value
+- **Default Status Change**: New members now default to 'New' status instead of 'Inactive' for accurate lifecycle tracking
+- **PT Membership Integration**: Added missing status updates for PT membership create/update/delete operations
+
+### 🎨 UI & Dashboard Improvements
+- **New Status Badge**: Added blue "New" status badge with distinct styling for visual differentiation
+- **Enhanced Status Filter**: Added "New Only" option to member filtering for better member management
+- **Dashboard Statistics**: Added "New Members" stat card showing count and percentage of prospects
+- **Filtering Logic**: Updated member filtering to properly handle the new "New" status option
+
+### 📊 Comprehensive Status Management
+- **Member Status Updates**: All membership operations (GC and PT) now trigger automatic member status recalculation
+- **Real-time Status Sync**: Dashboard loads with `updateAllMemberStatuses()` to ensure current status display
+- **Consistent Status Flow**: Member lifecycle now flows: New → Active → Inactive → Deleted
+- **Business Intelligence**: Clear separation between prospects (New) and lapsed customers (Inactive)
+
+### 🎯 Member Lifecycle Benefits
+- **Better Prospect Tracking**: Gym owners can easily identify new members who haven't made their first purchase
+- **Accurate Member Segmentation**: Clear distinction between active, inactive, new, and deleted members
+- **Improved Business Metrics**: Separate tracking of conversion rates from New to Active members
+- **Enhanced Member Management**: Targeted actions possible for different member lifecycle stages
+
+## [1.0.11] - 2025-06-25 - 🎯 Enhanced Member Status Management System
+
+### 🔧 Active Member Status Logic Implementation
+- **Dynamic Status Calculation**: Implemented automatic member status calculation based on active membership dates
+- **Active Member Definition**: Members with at least one membership where current date is between start_date and end_date
+- **Inactive Member Definition**: Members whose latest membership has expired
+- **Deleted Member Definition**: Soft-deleted members (preserves membership history)
+
+### ⚙️ Automatic Status Updates
+- **Real-time Status Updates**: Member status automatically updates when memberships are created, updated, or deleted
+- **Dashboard Status Sync**: Added `updateAllMemberStatuses()` call on dashboard load to ensure current status
+- **Membership Change Integration**: Status updates triggered after all membership CRUD operations
+- **Member CRUD Integration**: Status recalculation after member creation and updates
+
+### 🗄️ Database Layer Enhancements
+- **Status Calculation Functions**: Enhanced `updateMemberStatus()` and `updateAllMemberStatuses()` functions
+- **Membership-Based Logic**: Status determined by checking active memberships using current date
+- **Automatic Integration**: Status updates seamlessly integrated into existing CRUD operations
+- **Data Consistency**: Ensures member status always reflects current membership state
+
+### 📊 UI Status Display
+- **Accurate Status Badges**: UI now displays correct Active/Inactive status based on membership dates
+- **Real-time Updates**: Status changes reflect immediately after membership operations
+- **Filter Functionality**: Status filters work correctly with new calculation logic
+- **Dashboard Statistics**: Active member counts now accurately reflect membership-based status
+
+### 🧪 Test Infrastructure Updates
+- **Mock Data Updates**: Updated test mock data from `is_active` to `status` field
+- **Test Compatibility**: Fixed all tests to use new three-state status system
+- **Validation Testing**: Ensured all status-related functionality works correctly
+
+### 🔄 Technical Implementation
+- **Membership CRUD Integration**: All membership create/update/delete operations now update member status
+- **Dashboard Load Optimization**: Automatic status sync on app load ensures data accuracy
+- **Query Efficiency**: Optimized database queries for status calculation
+- **Business Logic Compliance**: Fully implements member status requirements from specifications
+
+### ✅ Quality Assurance
+- **Status Logic Testing**: Verified member status calculation with real membership data
+- **UI Integration Testing**: Confirmed status badges and filters work with new logic
+- **CRUD Operation Testing**: Validated status updates after all membership changes
+- **Performance Testing**: Ensured status updates don't impact application performance
+
 ## [1.0.10] - 2025-06-24 - ⚙️ App Settings & Customization System
 
 ### 🔐 Password-Protected Admin Settings

@@ -5,8 +5,11 @@ export const load = async () => {
     try {
         await db.connect();
         
+        // Update all member statuses to ensure they are current
+        await db.updateAllMemberStatuses();
+        
         // Run queries sequentially to avoid connection issues
-        const members = await db.getMembers(true);
+        const members = await db.getMembers();
         const groupPlans = await db.getGroupPlans(true);
         const groupClassMemberships = await db.getGroupClassMemberships(true);
         const ptMemberships = await db.getPTMemberships();
@@ -44,12 +47,16 @@ export const actions = {
             phone: data.get('phone'),
             email: data.get('email') || null,
             join_date: data.get('join_date') || new Date().toISOString().split('T')[0],
-            status: data.get('status') || 'Inactive'
+            status: data.get('status') || 'New'
         };
 
         try {
             await db.connect();
             const result = await db.createMember(member);
+            
+            // Update member status after creation based on any existing memberships
+            await db.updateMemberStatus(result.id);
+            
             return { success: true, member: result };
         } catch (error) {
             return { success: false, error: error.message };
@@ -67,12 +74,16 @@ export const actions = {
             phone: data.get('phone'),
             email: data.get('email') || null,
             join_date: data.get('join_date'),
-            status: data.get('status') || 'Inactive'
+            status: data.get('status') || 'New'
         };
 
         try {
             await db.connect();
             await db.updateMember(id, member);
+            
+            // Update member status after edit based on their memberships
+            await db.updateMemberStatus(id);
+            
             return { success: true };
         } catch (error) {
             return { success: false, error: error.message };

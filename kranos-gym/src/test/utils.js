@@ -115,7 +115,7 @@ export const mockData = {
 			phone: '555-0001',
 			email: 'john@example.com',
 			join_date: '2024-01-15',
-			is_active: true
+			status: 'Active'
 		},
 		{
 			id: 2,
@@ -123,7 +123,7 @@ export const mockData = {
 			phone: '555-0002',
 			email: 'jane@example.com',
 			join_date: '2024-02-01',
-			is_active: true
+			status: 'Active'
 		},
 		{
 			id: 3,
@@ -131,7 +131,7 @@ export const mockData = {
 			phone: '555-0003',
 			email: 'mike@example.com',
 			join_date: '2024-01-01',
-			is_active: false
+			status: 'Inactive'
 		}
 	],
 	
@@ -142,7 +142,7 @@ export const mockData = {
 			duration_days: 90,
 			default_amount: 120.00,
 			display_name: 'MMA Focus - 90 days',
-			is_active: true
+			status: 'Active'
 		},
 		{
 			id: 2,
@@ -150,7 +150,7 @@ export const mockData = {
 			duration_days: 30,
 			default_amount: 80.00,
 			display_name: 'Weight Training - 30 days',
-			is_active: true
+			status: 'Active'
 		},
 		{
 			id: 3,
@@ -158,7 +158,7 @@ export const mockData = {
 			duration_days: 60,
 			default_amount: 100.00,
 			display_name: 'Cardio Blast - 60 days',
-			is_active: false
+			status: 'Inactive'
 		}
 	],
 	
@@ -174,7 +174,7 @@ export const mockData = {
 			amount_paid: 120.00,
 			purchase_date: '2025-06-01',
 			membership_type: 'New',
-			is_active: true
+			status: 'Active'
 		},
 		{
 			id: 2,
@@ -187,7 +187,7 @@ export const mockData = {
 			amount_paid: 80.00,
 			purchase_date: '2025-06-15',
 			membership_type: 'Renewal',
-			is_active: true
+			status: 'Active'
 		}
 	],
 	

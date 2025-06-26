@@ -66,7 +66,6 @@
 				class:error={errorMessage}
 				disabled={isLoading}
 				on:keydown={handleKeydown}
-				autofocus
 			/>
 			{#if errorMessage}
 				<span class="error-message">{errorMessage}</span>

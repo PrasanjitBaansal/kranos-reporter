@@ -4,33 +4,48 @@
 
 	export let show = false;
 	export let member = null;
+	
+	$: console.log('Modal show state:', show);
+	$: console.log('Modal member data:', member);
 
 	let membershipHistory = [];
 	let loading = true;
 	let renewalsCount = 0;
+	let totalAmountPaid = 0;
 
 	$: if (show && member) {
 		loadMembershipHistory();
 	}
 
 	async function loadMembershipHistory() {
-		if (!member?.id) return;
+		if (!member?.id) {
+			console.log('No member ID found');
+			return;
+		}
 		
+		console.log('Loading membership history for member:', member.id);
 		loading = true;
 		try {
 			const response = await fetch(`/api/members/${member.id}/memberships`);
+			console.log('API response status:', response.status);
 			if (response.ok) {
 				const data = await response.json();
+				console.log('API response data:', data);
 				membershipHistory = data.memberships || [];
+				console.log('Loaded membership history:', membershipHistory);
 				renewalsCount = membershipHistory.filter(m => m.membership_type === 'Renewal').length;
+				totalAmountPaid = membershipHistory.reduce((sum, m) => sum + (m.amount_paid || 0), 0);
 			} else {
+				console.log('API response not ok:', response.status);
 				membershipHistory = [];
 				renewalsCount = 0;
+				totalAmountPaid = 0;
 			}
 		} catch (error) {
 			console.error('Error loading membership history:', error);
 			membershipHistory = [];
 			renewalsCount = 0;
+			totalAmountPaid = 0;
 		}
 		loading = false;
 	}
@@ -79,6 +94,10 @@
 			<h4>📊 Membership Summary</h4>
 			<div class="summary-stats">
 				<div class="stat-item">
+					<span class="stat-value">{formatCurrency(totalAmountPaid)}</span>
+					<span class="stat-label">Total Amount Paid</span>
+				</div>
+				<div class="stat-item">
 					<span class="stat-value">{membershipHistory.length}</span>
 					<span class="stat-label">Total Memberships</span>
 				</div>
@@ -105,33 +124,61 @@
 					<p>This member hasn't purchased any memberships yet.</p>
 				</div>
 			{:else}
-				<div class="history-list">
-					{#each membershipHistory as membership}
-						<div class="history-item">
-							<div class="history-header">
-								<span class="plan-name">{membership.plan_name || 'Unknown Plan'}</span>
-								<span class="membership-type {membership.membership_type?.toLowerCase() || 'new'}">{membership.membership_type || 'New'}</span>
-							</div>
-							<div class="history-details">
-								<div class="detail-row">
-									<span class="detail-label">Duration:</span>
-									<span class="detail-value">{formatDate(membership.start_date)} - {formatDate(membership.end_date)}</span>
-								</div>
-								<div class="detail-row">
-									<span class="detail-label">Amount:</span>
-									<span class="detail-value">{formatCurrency(membership.amount_paid)}</span>
-								</div>
-								<div class="detail-row">
-									<span class="detail-label">Purchase Date:</span>
-									<span class="detail-value">{formatDate(membership.purchase_date)}</span>
-								</div>
-								<div class="detail-row">
-									<span class="detail-label">Status:</span>
-									<span class="status-badge {membership.status?.toLowerCase() || 'inactive'}">{membership.status || 'Inactive'}</span>
-								</div>
-							</div>
-						</div>
-					{/each}
+				<div class="history-table-container">
+					<table class="history-table">
+						<thead>
+							<tr>
+								<th>Plan Name</th>
+								<th>Type</th>
+								<th>Duration</th>
+								<th>Start Date</th>
+								<th>End Date</th>
+								<th>Amount Paid</th>
+								<th>Status</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each membershipHistory as membership}
+								<tr class="history-row">
+									<td class="plan-name">{membership?.plan_name || 'Unknown Plan'}</td>
+									<td>
+										{#if membership?.type && typeof membership.type === 'string'}
+											<span class="membership-type {membership.type.toLowerCase().replace(' ', '-')}">
+												{membership.type}
+											</span>
+										{:else}
+											<span class="membership-type group-class">
+												Group Class
+											</span>
+										{/if}
+									</td>
+									<td>
+										{#if membership?.duration_days}
+											{membership.duration_days} days
+										{:else if membership?.sessions_total}
+											{membership.sessions_total} sessions
+										{:else}
+											-
+										{/if}
+									</td>
+									<td>{formatDate(membership?.start_date)}</td>
+									<td>{formatDate(membership?.end_date)}</td>
+									<td class="amount">{formatCurrency(membership?.amount_paid)}</td>
+									<td>
+										{#if membership?.status && typeof membership.status === 'string'}
+											<span class="status-badge {membership.status.toLowerCase()}">
+												{membership.status}
+											</span>
+										{:else}
+											<span class="status-badge inactive">
+												Inactive
+											</span>
+										{/if}
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
 				</div>
 			{/if}
 		</div>
@@ -258,80 +305,71 @@
 		color: var(--text);
 	}
 
-	.history-list {
+	.history-table-container {
 		max-height: 400px;
 		overflow-y: auto;
-	}
-
-	.history-item {
-		padding: 1rem;
-		margin-bottom: 0.75rem;
-		background: var(--surface);
 		border: 1px solid var(--border);
 		border-radius: 8px;
-		transition: var(--transition-fast);
 	}
 
-	.history-item:hover {
+	.history-table {
+		width: 100%;
+		border-collapse: collapse;
+		background: var(--surface);
+	}
+
+	.history-table th {
+		background: var(--surface-light);
+		padding: 0.75rem;
+		text-align: left;
+		font-weight: 600;
+		color: var(--text);
+		border-bottom: 2px solid var(--primary);
+		position: sticky;
+		top: 0;
+		z-index: 10;
+		font-size: 0.85rem;
+	}
+
+	.history-table td {
+		padding: 0.75rem;
+		border-bottom: 1px solid var(--border);
+		color: var(--text);
+		font-size: 0.85rem;
+	}
+
+	.history-row:hover {
 		background: var(--gradient-glow);
-		transform: translateY(-2px);
-		box-shadow: 0 4px 12px rgba(243, 148, 7, 0.2);
-	}
-
-	.history-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 0.75rem;
 	}
 
 	.plan-name {
 		font-weight: 600;
 		color: var(--text);
-		font-size: 1rem;
+	}
+
+	.amount {
+		font-weight: 600;
+		color: var(--primary);
 	}
 
 	.membership-type {
 		padding: 0.25rem 0.5rem;
 		border-radius: 12px;
-		font-size: 0.75rem;
+		font-size: 0.7rem;
 		font-weight: 500;
+		white-space: nowrap;
 	}
 
-	.membership-type.new {
+	.membership-type.group-class {
 		background: rgba(34, 197, 94, 0.2);
 		color: var(--success);
 		border: 1px solid var(--success);
 	}
 
-	.membership-type.renewal {
+	.membership-type.personal-training {
 		background: rgba(59, 130, 246, 0.2);
 		color: #3b82f6;
 		border: 1px solid #3b82f6;
-	}
-
-	.history-details {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-		gap: 0.5rem;
-	}
-
-	.detail-row {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-
-	.detail-label {
-		font-size: 0.85rem;
-		color: var(--text-muted);
-		font-weight: 500;
-	}
-
-	.detail-value {
-		font-size: 0.85rem;
-		color: var(--text);
-		font-weight: 500;
 	}
 
 	.status-badge {
@@ -369,13 +407,18 @@
 			gap: 1rem;
 		}
 
-		.history-details {
-			grid-template-columns: 1fr;
+		.history-table-container {
+			overflow-x: auto;
 		}
 
-		.detail-row {
-			justify-content: flex-start;
-			gap: 1rem;
+		.history-table {
+			min-width: 600px;
+		}
+
+		.history-table th,
+		.history-table td {
+			padding: 0.5rem;
+			font-size: 0.8rem;
 		}
 	}
 </style>

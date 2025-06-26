@@ -40,7 +40,8 @@
 		// Status filter
 		const matchesStatus = statusFilter === 'all' || 
 			(statusFilter === 'active' && member.status === 'Active') ||
-			(statusFilter === 'inactive' && member.status === 'Inactive');
+			(statusFilter === 'inactive' && member.status === 'Inactive') ||
+			(statusFilter === 'new' && member.status === 'New');
 		
 		return matchesSearch && matchesDateRange && matchesStatus;
 	});
@@ -194,31 +195,36 @@
 				<div class="filters-container">
 					<!-- Date Range Filter -->
 					<div class="filter-group">
-						<label class="filter-label">📅 Join Date:</label>
+						<label class="filter-label" for="joinDateFrom">📅 Join Date:</label>
 						<div class="date-range">
 							<input
+								id="joinDateFrom"
 								type="date"
 								bind:value={joinDateFrom}
 								class="date-input"
 								placeholder="From"
+								aria-label="From date"
 							/>
 							<span class="date-separator">to</span>
 							<input
+								id="joinDateTo"
 								type="date"
 								bind:value={joinDateTo}
 								class="date-input"
 								placeholder="To"
+								aria-label="To date"
 							/>
 						</div>
 					</div>
 
 					<!-- Status Filter -->
 					<div class="filter-group">
-						<label class="filter-label">🎯 Status:</label>
-						<select bind:value={statusFilter} class="status-select">
+						<label class="filter-label" for="statusFilter">🎯 Status:</label>
+						<select id="statusFilter" bind:value={statusFilter} class="status-select">
 							<option value="all">All Members</option>
 							<option value="active">Active Only</option>
 							<option value="inactive">Inactive Only</option>
+							<option value="new">New Only</option>
 						</select>
 					</div>
 
@@ -229,7 +235,9 @@
 
 					<!-- Search -->
 					<div class="search-container">
+						<label for="searchTerm" class="sr-only">Search members</label>
 						<input
+							id="searchTerm"
 							type="text"
 							placeholder="Search members..."
 							bind:value={searchTerm}
@@ -277,6 +285,8 @@
 									<td class="member-status">
 										{#if member.status === 'Active'}
 											<span class="status-badge active">Active</span>
+										{:else if member.status === 'New'}
+											<span class="status-badge new">New</span>
 										{:else}
 											<span class="status-badge inactive">Inactive</span>
 										{/if}
@@ -663,6 +673,12 @@
 		border: 1px solid var(--error);
 	}
 
+	.status-badge.new {
+		background: rgba(59, 130, 246, 0.2);
+		color: #3b82f6;
+		border: 1px solid #3b82f6;
+	}
+
 	.member-actions {
 		text-align: center;
 	}
@@ -897,5 +913,17 @@
 		.form-actions {
 			flex-direction: column;
 		}
+	}
+
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
 	}
 </style>
