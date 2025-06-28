@@ -133,6 +133,76 @@ if (result.active_memberships > 0) {
 - Test member created with 'New' status
 - Filter functionality verified working
 
+## Date Format Standardization Fix (2025-06-28) ✅
+
+### Issue Resolution
+- **Problem**: Inconsistent date formats causing sorting issues in member table
+- **Symptom**: Aarti's join date "30/05/2025" (DD/MM/YYYY) not sorting correctly with others in "2024-01-15" (YYYY-MM-DD) format
+- **Root Cause**: Mixed date formats from different import sources (bulk import vs standalone script)
+
+### Technical Changes Applied
+1. **Member Table Display**: Enhanced `formatDateForDisplay()` function to handle both YYYY-MM-DD and DD/MM/YYYY inputs
+2. **Import Script Fix**: Updated `/src/lib/db/import-csv.js` with robust DD-MM-YYYY parsing logic
+3. **Sorting Enhancement**: Added `parseDateForSorting()` function to handle mixed format sorting
+4. **UI Layout Improvement**: Aligned search box to right of filters section
+
+### Date Handling Functions Established
+- **`formatDateForDisplay()`**: Converts any date format to DD/MM/YYYY for consistent display
+- **`parseDateForSorting()`**: Converts mixed formats to proper Date objects for accurate sorting
+- **`parseDate()` (import-csv.js)**: Enhanced to parse DD-MM-YYYY format and store as YYYY-MM-DD
+
+### Implementation Details
+- **Display Standard**: All dates show as DD/MM/YYYY regardless of database storage format
+- **Storage Standard**: Database always stores dates as YYYY-MM-DD for consistency
+- **Import Validation**: Both DD-MM-YYYY and DD/MM/YYYY accepted, properly validated
+- **Sorting Compatibility**: Handles legacy YYYY-MM-DD and new DD/MM/YYYY display formats
+
+### Verification Status ✅
+- Date display consistency across member table
+- Proper chronological sorting regardless of source format
+- Import script enhanced for DD-MM-YYYY input validation
+- Search box aligned to right as requested
+
+## Mobile Responsive Styling Enhancement (2025-06-28) ✅
+
+### Issue Resolution
+- **Problem**: Status badges (ACTIVE/INACTIVE) being cut off and wrapping awkwardly on mobile devices
+- **Symptom**: Text wrapping in status column making badges unreadable on small screens
+- **Root Cause**: Insufficient mobile responsive styling for table columns and badge components
+
+### Technical Changes Applied
+1. **Table Container Enhancement**: Added horizontal scrolling with touch-friendly behavior
+   - Added `overflow-x: auto` and `-webkit-overflow-scrolling: touch`
+   - Increased minimum table width: 850px (tablet), 900px (mobile)
+   - Enhanced table padding for better touch interaction
+
+2. **Status Badge Improvements**: Prevented text wrapping and improved spacing
+   - Added `white-space: nowrap` to all status badges globally
+   - Enhanced `min-width: fit-content` for proper content fitting
+   - Improved padding and font sizes for mobile readability
+
+3. **Column Spacing Optimization**: Ensured adequate space for content
+   - Status column: minimum 90px width
+   - Actions column: minimum 90px width with no text wrapping
+   - Better cell padding for improved touch targets
+
+4. **Progressive Mobile Enhancement**: 
+   - **768px breakpoint**: Tablet-optimized sizes and spacing
+   - **480px breakpoint**: Mobile-optimized compact layout
+   - Maintained visual hierarchy and touch accessibility
+
+### Implementation Details
+- **File Modified**: `/src/routes/memberships/+page.svelte`
+- **CSS Classes Enhanced**: `.status`, `.membership-type-badge`, `.table-container`, `.status-cell`, `.actions-cell`
+- **Mobile Breakpoints**: Enhanced responsive behavior at 768px and 480px
+- **Touch Optimization**: Better button sizes and spacing for mobile interaction
+
+### Verification Status ✅
+- Status badges display properly without text wrapping
+- Table scrolls horizontally on mobile while maintaining readability
+- Touch targets meet accessibility guidelines (minimum 44px)
+- Visual consistency maintained across all screen sizes
+
 ## Programming Principles
 - Always strictly do what has been asked and nothing more
 - Prefer editing existing files over creating new ones

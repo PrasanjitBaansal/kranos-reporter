@@ -1020,6 +1020,8 @@
 	.table-container {
 		flex: 1;
 		padding: 1rem;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
 	}
 	
 	.memberships-table {
@@ -1083,10 +1085,20 @@
 		font-size: 0.75rem;
 		font-weight: 600;
 		text-transform: uppercase;
+		white-space: nowrap;
 	}
 	
 	.status-cell, .actions-cell {
 		text-align: center;
+	}
+	
+	.status-cell {
+		min-width: 90px;
+	}
+	
+	.actions-cell {
+		min-width: 90px;
+		white-space: nowrap;
 	}
 	
 	.list-container {
@@ -1170,6 +1182,7 @@
 		font-size: 0.75rem;
 		font-weight: 600;
 		text-transform: uppercase;
+		white-space: nowrap;
 	}
 	
 	.membership-actions {
@@ -1188,6 +1201,8 @@
 		letter-spacing: 0.5px;
 		position: relative;
 		overflow: hidden;
+		white-space: nowrap;
+		min-width: fit-content;
 	}
 	
 	.status::before {
@@ -1412,11 +1427,36 @@
 		font-family: monospace;
 	}
 	
-	@media (max-width: 1024px) {
+	@media (max-width: 768px) {
+		.membership-type-selector {
+			padding: 1rem;
+		}
+		
+		.switch-text {
+			font-size: 1rem;
+		}
+		
+		.header {
+			padding: 1rem;
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 1rem;
+		}
+		
+		.header h2 {
+			font-size: 1.1rem;
+		}
+		
+		.header-buttons {
+			width: 100%;
+			justify-content: stretch;
+		}
+		
 		.filters-container {
 			flex-direction: column;
 			align-items: stretch;
 			gap: 1rem;
+			padding: 1rem;
 		}
 		
 		.search-container {
@@ -1425,38 +1465,244 @@
 		
 		.filter-group {
 			width: 100%;
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.5rem;
 		}
 		
 		.plan-filter {
 			width: 100%;
-		}
-	}
-	
-	@media (max-width: 640px) {
-		.membership-item {
-			flex-direction: column;
-			align-items: flex-start;
-			gap: 1rem;
+			padding: 0.75rem;
+			font-size: 1rem;
 		}
 		
-		.membership-actions {
-			flex-direction: row;
-			align-items: center;
-			width: 100%;
-			justify-content: space-between;
+		.search-input {
+			padding: 0.75rem 1rem 0.75rem 3rem;
+			font-size: 1rem;
 		}
 		
-		.membership-details {
-			flex-direction: column;
-			gap: 0.5rem;
+		.table-container {
+			padding: 0.75rem;
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
 		}
 		
-		.member-grid, .plan-grid {
-			grid-template-columns: 1fr;
+		.memberships-table {
+			min-width: 850px;
+			font-size: 0.85rem;
+		}
+		
+		.memberships-table th,
+		.memberships-table td {
+			padding: 0.6rem 0.5rem;
+		}
+		
+		.memberships-table th {
+			font-size: 0.8rem;
+		}
+		
+		.status {
+			padding: 0.3rem 0.6rem;
+			font-size: 0.7rem;
+			white-space: nowrap;
+			min-width: fit-content;
+		}
+		
+		.membership-type-badge {
+			padding: 0.2rem 0.5rem;
+			font-size: 0.65rem;
+			white-space: nowrap;
+		}
+		
+		.edit-btn, .delete-btn {
+			padding: 0.3rem 0.5rem;
+			font-size: 0.7rem;
+			min-width: 32px;
+			height: 32px;
+		}
+		
+		.actions-cell {
+			white-space: nowrap;
+			min-width: 80px;
+		}
+		
+		.edit-btn, .delete-btn {
+			padding: 0.3rem 0.5rem;
+			font-size: 0.7rem;
 		}
 		
 		.form-actions {
 			flex-direction: column;
+			gap: 0.75rem;
+		}
+		
+		.form-control {
+			padding: 0.875rem;
+			font-size: 1rem;
+		}
+		
+		.membership-form-content {
+			gap: 1.25rem;
+		}
+		
+		.member-dropdown {
+			max-height: 150px;
+		}
+		
+		.member-option {
+			padding: 0.75rem;
+		}
+		
+		.empty-state {
+			padding: 2rem 1rem;
+		}
+		
+		.empty-icon {
+			font-size: 2.5rem;
+		}
+	}
+	
+	@media (max-width: 480px) {
+		.membership-type-selector {
+			padding: 0.75rem;
+		}
+		
+		.switch-label {
+			gap: 0.75rem;
+		}
+		
+		.switch-text {
+			font-size: 0.9rem;
+		}
+		
+		.switch-slider {
+			width: 50px;
+			height: 26px;
+		}
+		
+		.switch-slider::before {
+			width: 18px;
+			height: 18px;
+		}
+		
+		.switch-input:checked + .switch-slider::before {
+			transform: translateX(24px);
+		}
+		
+		.header {
+			padding: 0.75rem;
+		}
+		
+		.header h2 {
+			font-size: 1rem;
+		}
+		
+		.filters-container {
+			padding: 0.75rem;
+		}
+		
+		.search-input {
+			padding: 0.75rem 1rem 0.75rem 3rem;
+			font-size: 1rem;
+		}
+		
+		.table-container {
+			padding: 0.5rem;
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+		}
+		
+		.memberships-table {
+			min-width: 900px;
+			font-size: 0.8rem;
+		}
+		
+		.memberships-table th,
+		.memberships-table td {
+			padding: 0.5rem 0.4rem;
+		}
+		
+		.memberships-table th {
+			font-size: 0.75rem;
+		}
+		
+		.status {
+			padding: 0.3rem 0.6rem;
+			font-size: 0.7rem;
+			white-space: nowrap;
+			min-width: fit-content;
+		}
+		
+		.membership-type-badge {
+			padding: 0.2rem 0.4rem;
+			font-size: 0.65rem;
+			white-space: nowrap;
+		}
+		
+		.edit-btn, .delete-btn {
+			padding: 0.25rem 0.4rem;
+			font-size: 0.65rem;
+			min-width: 28px;
+			height: 28px;
+		}
+		
+		.actions-cell {
+			white-space: nowrap;
+			min-width: 70px;
+		}
+		
+		.empty-state {
+			padding: 1.5rem 0.5rem;
+		}
+		
+		.empty-icon {
+			font-size: 2rem;
+		}
+		
+		.total-summary {
+			flex-direction: column;
+			gap: 0.75rem;
+		}
+		
+		.summary-card {
+			padding: 0.875rem;
+		}
+		
+		.summary-icon {
+			font-size: 1.5rem;
+		}
+		
+		.summary-value {
+			font-size: 1.125rem;
+		}
+		
+		.summary-label {
+			font-size: 0.8rem;
+		}
+		
+		.member-dropdown {
+			max-height: 120px;
+		}
+		
+		.member-option {
+			padding: 0.625rem;
+		}
+		
+		.member-option-name {
+			font-size: 0.9rem;
+		}
+		
+		.member-option-phone {
+			font-size: 0.8rem;
+		}
+		
+		.form-control {
+			padding: 0.875rem;
+			font-size: 1rem;
+		}
+		
+		.form-group label {
+			font-size: 0.9rem;
 		}
 	}
 

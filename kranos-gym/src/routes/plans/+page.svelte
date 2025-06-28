@@ -616,30 +616,158 @@
 	}
 
 	@media (max-width: 768px) {
-		.plans-table-container {
-			overflow-x: auto;
+		.plans-page {
+			padding: 1rem 0.5rem;
 		}
-
-		.plans-table {
-			min-width: 600px;
-		}
-
+		
 		.page-header {
 			flex-direction: column;
 			align-items: flex-start;
+			margin-bottom: 2rem;
+			gap: 1.5rem;
+		}
+		
+		.header-content h1 {
+			font-size: 2rem;
+		}
+		
+		.page-subtitle {
+			font-size: 1rem;
 		}
 
 		.card-header {
 			flex-direction: column;
 			align-items: flex-start;
+			gap: 1.5rem;
+		}
+		
+		.card-header h2 {
+			font-size: 1.25rem;
 		}
 
 		.search-container {
 			width: 100%;
 		}
+		
+		.search-input {
+			padding: 0.75rem 2.5rem 0.75rem 1rem;
+			font-size: 1rem;
+		}
+
+		.plans-table-container {
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+			border-radius: var(--radius-md);
+		}
+
+		.plans-table {
+			min-width: 650px;
+			font-size: 0.9rem;
+		}
+		
+		.plans-table th,
+		.plans-table td {
+			padding: 0.75rem 0.5rem;
+		}
+		
+		.plans-table th {
+			font-size: 0.85rem;
+		}
+		
+		.status-badge {
+			padding: 0.2rem 0.4rem;
+			font-size: 0.7rem;
+		}
+		
+		.btn-sm {
+			padding: 0.4rem 0.8rem;
+			font-size: 0.8rem;
+		}
 
 		.form-actions {
 			flex-direction: column;
+			gap: 0.75rem;
+		}
+		
+		.plan-form-content {
+			gap: 1.25rem;
+		}
+		
+		.empty-state {
+			padding: 2rem 1rem;
+		}
+		
+		.empty-icon {
+			font-size: 3rem;
+		}
+	}
+	
+	@media (max-width: 480px) {
+		.plans-page {
+			padding: 0.5rem 0.25rem;
+		}
+		
+		.page-header {
+			margin-bottom: 1.5rem;
+			gap: 1rem;
+		}
+		
+		.header-content h1 {
+			font-size: 1.75rem;
+		}
+		
+		.page-subtitle {
+			font-size: 0.9rem;
+		}
+		
+		.card-header h2 {
+			font-size: 1.1rem;
+		}
+		
+		.plans-table {
+			min-width: 550px;
+			font-size: 0.85rem;
+		}
+		
+		.plans-table th,
+		.plans-table td {
+			padding: 0.6rem 0.4rem;
+		}
+		
+		.status-badge {
+			padding: 0.15rem 0.3rem;
+			font-size: 0.65rem;
+		}
+		
+		.btn-sm {
+			padding: 0.35rem 0.6rem;
+			font-size: 0.75rem;
+		}
+		
+		.empty-state {
+			padding: 2rem 0.5rem;
+		}
+		
+		.empty-icon {
+			font-size: 2.5rem;
+		}
+		
+		.search-input {
+			padding: 0.75rem 2.5rem 0.75rem 1rem;
+			font-size: 1rem;
+		}
+		
+		.form-control {
+			padding: 0.875rem;
+			font-size: 1rem;
+		}
+		
+		.form-label {
+			font-size: 0.9rem;
+		}
+		
+		.form-hint {
+			font-size: 0.75rem;
 		}
 	}
 </style>

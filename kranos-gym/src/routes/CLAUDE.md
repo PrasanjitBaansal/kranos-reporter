@@ -149,23 +149,30 @@ try {
 
 ## Page-Specific Patterns
 
-### Members Page Features
+### Members Page Features ✅ ENHANCED
 - **Interactive Rows**: Clickable member rows open detailed history modal
 - **Filtering System**: Join date range, status filter (All/Active/Inactive/New), search functionality
+- **Search Box Alignment**: ✅ Search box aligned to right side of filters section for better layout
+- **Join Date Sorting**: ✅ Clickable column header with visual sort indicators (▲/▼)
+- **Date Format Consistency**: ✅ All join dates display in DD/MM/YYYY format regardless of storage format
+- **Mixed Format Sorting**: ✅ Handles both YYYY-MM-DD and DD/MM/YYYY formats correctly
 - **Member Details Modal**: Complete membership history with renewal count
 - **Status Management**: Four-tier status system (Active/New/Inactive/Deleted) with automatic calculation
-- **New Filter Fix**: ✅ "New Only" filter now works properly with enhanced status logic
+- **New Filter Fix**: ✅ "New Only" filter works properly with enhanced status logic
 
 ### Plans Page Features
 - **Real-time Display Name**: Auto-generated from name + duration
 - **Uniqueness Validation**: Prevents duplicate display names
 - **Live Preview**: Shows generated display name as user types
 
-### Memberships Page Features
+### Memberships Page Features ✅ ENHANCED
 - **Mode Toggle**: Radio buttons for GC vs PT membership types
 - **Dynamic Forms**: Different validation and fields per membership type
 - **Member Selection**: Filtered to active members only
 - **Auto-calculations**: End dates, renewal detection
+- **Mobile Responsive Table**: ✅ Horizontal scrolling with touch-friendly behavior
+- **Status Badge Fix**: ✅ No text wrapping, proper mobile display for ACTIVE/INACTIVE badges
+- **Touch Optimization**: ✅ Adequate button sizes and spacing for mobile interaction
 
 ### Bulk Import Page Features ✅ PRODUCTION READY
 - **CSV Template**: ✅ Download template with sample data and DD-MM-YYYY date format
@@ -186,6 +193,8 @@ try {
 - **Date Format Consistency**: DD-MM-YYYY format throughout (template, validation, display, conversion)
 - **Error Debugging**: Display current field values under error messages for user convenience
 - **Import Preview**: Show actual data samples under stat counts for better user understanding
+- **Mobile Table Responsiveness**: Horizontal scrolling + `white-space: nowrap` for badges and status elements
+- **Touch Target Optimization**: Minimum 44px button heights with adequate spacing for mobile accessibility
 
 ### Reporting Page Features
 - **Date Range Selection**: Flexible financial reporting periods

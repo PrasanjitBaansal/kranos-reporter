@@ -122,11 +122,13 @@ export async function GET({ params }) {
 - **Excel Structure**: Requires "GC" and "PT" sheets with specific columns
 - **Post-Migration**: Verify data populated with direct database queries
 
-### CSV Import System ✅
+### CSV Import System ✅ ENHANCED
 - **Import Script**: `/src/lib/db/import-csv.js` - Standalone Node.js script using better-sqlite3
 - **CSV Format**: `name,phone,email,plan_name,duration_days,start_date,amount_paid,purchase_date`
+- **Date Format**: ✅ Enhanced DD-MM-YYYY parsing with proper validation and YYYY-MM-DD storage
 - **Business Logic**: Auto-creates members/plans, calculates end dates, determines membership types
 - **SQL Fix Applied**: Corrected double quotes to single quotes for string literals in WHERE clauses
+- **Date Processing**: Robust parsing handles DD-MM-YYYY or DD/MM/YYYY input, stores as YYYY-MM-DD
 - **Testing Status**: ✅ Verified working - successfully imported 5 test memberships with proper relationships
 
 ## Critical Business Rules

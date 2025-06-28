@@ -406,27 +406,174 @@
 	}
 
 	@media (max-width: 768px) {
+		.member-header h3 {
+			font-size: 1.25rem;
+		}
+
 		.member-info {
 			grid-template-columns: 1fr;
+			gap: 0.5rem;
+		}
+		
+		.info-item {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.25rem;
+		}
+		
+		.label {
+			min-width: auto;
+			font-size: 0.85rem;
+		}
+		
+		.value {
+			font-size: 0.9rem;
+		}
+
+		.renewals-summary {
+			padding: 0.875rem;
+		}
+		
+		.renewals-summary h4 {
+			font-size: 1rem;
 		}
 
 		.summary-stats {
 			flex-direction: column;
-			gap: 1rem;
+			gap: 0.75rem;
+		}
+		
+		.stat-value {
+			font-size: 1.25rem;
+		}
+		
+		.stat-label {
+			font-size: 0.75rem;
+		}
+
+		.membership-history h4 {
+			font-size: 1rem;
 		}
 
 		.history-table-container {
 			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+			max-height: 300px;
 		}
 
 		.history-table {
-			min-width: 600px;
+			min-width: 650px;
 		}
 
 		.history-table th,
 		.history-table td {
-			padding: 0.5rem;
+			padding: 0.6rem 0.4rem;
 			font-size: 0.8rem;
+		}
+		
+		.membership-type {
+			font-size: 0.65rem;
+			padding: 0.2rem 0.4rem;
+		}
+		
+		.status-badge {
+			font-size: 0.65rem;
+			padding: 0.2rem 0.4rem;
+		}
+	}
+	
+	@media (max-width: 480px) {
+		.member-header {
+			margin-bottom: 1rem;
+			padding-bottom: 0.75rem;
+		}
+
+		.member-header h3 {
+			font-size: 1.1rem;
+		}
+
+		.member-info {
+			gap: 0.5rem;
+		}
+		
+		.info-item {
+			gap: 0.2rem;
+		}
+		
+		.label {
+			font-size: 0.8rem;
+		}
+		
+		.value {
+			font-size: 0.85rem;
+		}
+
+		.renewals-summary {
+			padding: 0.75rem;
+			margin-bottom: 1rem;
+		}
+		
+		.renewals-summary h4 {
+			font-size: 0.95rem;
+			margin-bottom: 0.75rem;
+		}
+
+		.summary-stats {
+			gap: 0.5rem;
+		}
+		
+		.stat-value {
+			font-size: 1.1rem;
+		}
+		
+		.stat-label {
+			font-size: 0.7rem;
+		}
+
+		.membership-history h4 {
+			font-size: 0.95rem;
+			margin-bottom: 0.75rem;
+		}
+
+		.history-table-container {
+			max-height: 250px;
+		}
+
+		.history-table {
+			min-width: 550px;
+		}
+
+		.history-table th,
+		.history-table td {
+			padding: 0.5rem 0.3rem;
+			font-size: 0.75rem;
+		}
+		
+		.membership-type {
+			font-size: 0.6rem;
+			padding: 0.15rem 0.3rem;
+		}
+		
+		.status-badge {
+			font-size: 0.6rem;
+			padding: 0.15rem 0.3rem;
+		}
+		
+		.loading-state {
+			padding: 1.5rem;
+		}
+		
+		.loading-spinner {
+			width: 20px;
+			height: 20px;
+		}
+		
+		.empty-state {
+			padding: 1.5rem;
+		}
+		
+		.empty-icon {
+			font-size: 2.5rem;
 		}
 	}
 </style>

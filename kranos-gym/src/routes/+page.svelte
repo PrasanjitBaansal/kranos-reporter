@@ -628,7 +628,11 @@
 	
 	@media (max-width: 768px) {
 		.dashboard {
-			padding: 1rem;
+			padding: 1rem 0.5rem;
+		}
+		
+		.dashboard-header {
+			margin-bottom: 2rem;
 		}
 		
 		.dashboard-title {
@@ -641,13 +645,70 @@
 			font-size: 2.5rem;
 		}
 		
+		.dashboard-subtitle {
+			font-size: 1rem;
+		}
+		
 		.stats-grid {
 			grid-template-columns: 1fr;
 			gap: 1rem;
+			margin-bottom: 2rem;
+		}
+		
+		.stat-card {
+			padding: 1.5rem;
+		}
+		
+		.stat-value {
+			font-size: 2rem;
 		}
 		
 		.actions-grid-full {
 			grid-template-columns: repeat(2, 1fr);
+			gap: 0.75rem;
+		}
+		
+		.action-item {
+			padding: 1rem;
+			flex-direction: column;
+			text-align: center;
+			gap: 0.75rem;
+		}
+		
+		.action-icon {
+			width: 40px;
+			height: 40px;
+			font-size: 1.5rem;
+		}
+		
+		.action-content h4 {
+			font-size: 0.9rem;
+		}
+		
+		.action-content p {
+			font-size: 0.8rem;
+		}
+		
+		.activity-item {
+			padding: 0.75rem;
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.5rem;
+		}
+		
+		.activity-icon {
+			width: 36px;
+			height: 36px;
+			font-size: 1.25rem;
+		}
+		
+		.admin-access {
+			justify-content: center;
+			margin-top: 1.5rem;
+		}
+		
+		.admin-button {
+			padding: 0.75rem 1.5rem;
 		}
 	}
 	
@@ -713,23 +774,75 @@
 	}
 	
 	@media (max-width: 480px) {
+		.dashboard {
+			padding: 0.5rem 0.25rem;
+		}
+		
+		.dashboard-header {
+			margin-bottom: 1.5rem;
+		}
+		
+		.dashboard-title {
+			font-size: 1.75rem;
+		}
+		
+		.title-icon {
+			font-size: 2rem;
+		}
+		
+		.dashboard-subtitle {
+			font-size: 0.9rem;
+		}
+		
 		.actions-grid-full {
 			grid-template-columns: 1fr;
+			gap: 0.5rem;
 		}
 		
-		.footer-card {
-			flex-direction: column;
-			text-align: center;
-			gap: 1.5rem;
+		.action-item {
+			padding: 1.25rem;
+			gap: 1rem;
 		}
 		
-		.footer-actions {
-			flex-direction: column;
+		.action-icon {
+			width: 48px;
+			height: 48px;
+			font-size: 1.75rem;
+		}
+		
+		.stat-card {
+			padding: 1.25rem;
+		}
+		
+		.stat-value {
+			font-size: 1.75rem;
+		}
+		
+		.stat-header h3 {
+			font-size: 1rem;
+		}
+		
+		.stat-trend {
+			font-size: 0.8rem;
+		}
+		
+		.card-header h2 {
+			font-size: 1.25rem;
+		}
+		
+		.activity-item {
+			padding: 1rem;
+			border-radius: var(--radius-md);
 		}
 		
 		.admin-access {
 			justify-content: center;
-			margin-top: 1.5rem;
+			margin-top: 1rem;
+		}
+		
+		.admin-button {
+			padding: 0.75rem 2rem;
+			border-radius: var(--radius-lg);
 		}
 	}
 </style>

@@ -664,6 +664,14 @@
 	
 	/* Responsive */
 	@media (max-width: 768px) {
+		.settings-page {
+			padding: 1rem 0.5rem;
+		}
+		
+		.settings-header {
+			margin-bottom: 2rem;
+		}
+		
 		.settings-title {
 			font-size: 2rem;
 			flex-direction: column;
@@ -674,29 +682,202 @@
 			font-size: 2.5rem;
 		}
 		
-		.color-setting,
+		.settings-subtitle {
+			font-size: 1rem;
+		}
+		
+		.settings-container {
+			gap: 1.5rem;
+		}
+		
+		.setting-card {
+			padding: 1.5rem;
+		}
+		
+		.setting-header h2 {
+			font-size: 1.2rem;
+		}
+		
+		.setting-header p {
+			font-size: 0.85rem;
+		}
+		
+		.color-setting {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 1rem;
+		}
+		
+		.color-preview,
+		.color-input {
+			width: 50px;
+			height: 50px;
+		}
+		
 		.file-setting {
 			flex-direction: column;
 			align-items: flex-start;
 			gap: 1rem;
 		}
 		
+		.file-preview {
+			width: 70px;
+			height: 70px;
+		}
+		
+		.favicon-preview {
+			width: 28px;
+			height: 28px;
+		}
+		
+		.logo-emoji-preview {
+			font-size: 2rem;
+		}
+		
+		.logo-image-preview {
+			width: 50px;
+			height: 50px;
+		}
+		
 		.file-upload {
 			width: 100%;
 		}
 		
+		.file-label {
+			padding: 0.75rem 1rem;
+			font-size: 0.9rem;
+		}
+		
 		.theme-options {
 			grid-template-columns: 1fr;
+			gap: 0.75rem;
+		}
+		
+		.theme-preview {
+			height: 70px;
+		}
+		
+		.theme-name {
+			font-size: 0.9rem;
+		}
+		
+		.settings-footer {
+			margin-top: 2rem;
+			padding-top: 1.5rem;
 		}
 	}
 	
 	@media (max-width: 480px) {
-		.setting-card {
-			padding: 1.5rem;
+		.settings-page {
+			padding: 0.5rem 0.25rem;
 		}
 		
-		.settings-page {
-			padding: 1rem;
+		.settings-header {
+			margin-bottom: 1.5rem;
+		}
+		
+		.settings-title {
+			font-size: 1.75rem;
+		}
+		
+		.title-icon {
+			font-size: 2rem;
+		}
+		
+		.settings-subtitle {
+			font-size: 0.9rem;
+		}
+		
+		.settings-container {
+			gap: 1.25rem;
+		}
+		
+		.setting-card {
+			padding: 1.25rem;
+		}
+		
+		.setting-header {
+			margin-bottom: 1.25rem;
+		}
+		
+		.setting-header h2 {
+			font-size: 1.1rem;
+			gap: 0.5rem;
+		}
+		
+		.setting-icon {
+			font-size: 1.25rem;
+		}
+		
+		.setting-header p {
+			font-size: 0.8rem;
+		}
+		
+		.color-setting {
+			gap: 0.75rem;
+		}
+		
+		.color-preview,
+		.color-input {
+			width: 45px;
+			height: 45px;
+		}
+		
+		.color-value {
+			font-size: 0.85rem;
+		}
+		
+		.file-setting {
+			gap: 0.75rem;
+		}
+		
+		.file-preview {
+			width: 60px;
+			height: 60px;
+		}
+		
+		.favicon-preview {
+			width: 24px;
+			height: 24px;
+		}
+		
+		.logo-emoji-preview {
+			font-size: 1.75rem;
+		}
+		
+		.logo-image-preview {
+			width: 45px;
+			height: 45px;
+		}
+		
+		.file-label {
+			padding: 0.75rem;
+			font-size: 0.85rem;
+			width: 100%;
+			justify-content: center;
+		}
+		
+		.btn {
+			width: 100%;
+			justify-content: center;
+			padding: 0.75rem;
+		}
+		
+		.theme-options {
+			gap: 0.5rem;
+		}
+		
+		.theme-preview {
+			height: 60px;
+		}
+		
+		.theme-name {
+			font-size: 0.85rem;
+		}
+		
+		.settings-footer {
+			margin-top: 1.5rem;
+			padding-top: 1rem;
 		}
 	}
 </style>

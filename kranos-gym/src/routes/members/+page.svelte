@@ -961,22 +961,33 @@
 	}
 
 	@media (max-width: 768px) {
-		.members-table-container {
-			/* Removed overflow-x: auto to prevent horizontal scroll */
+		.members-page {
+			padding: 1rem 0.5rem;
 		}
-
-		.members-table {
-			/* Removed min-width to allow table to fit page width */
-		}
-
+		
 		.page-header {
 			flex-direction: column;
 			align-items: flex-start;
+			margin-bottom: 2rem;
+			gap: 1.5rem;
+		}
+		
+		.header-content h1 {
+			font-size: 2rem;
+		}
+		
+		.page-subtitle {
+			font-size: 1rem;
 		}
 
 		.card-header {
 			flex-direction: column;
 			align-items: flex-start;
+			gap: 1.5rem;
+		}
+		
+		.card-header h2 {
+			font-size: 1.25rem;
 		}
 
 		.filters-container {
@@ -997,7 +1008,7 @@
 		.filter-group {
 			flex-direction: column;
 			align-items: flex-start;
-			gap: 0.25rem;
+			gap: 0.5rem;
 		}
 
 		.date-range {
@@ -1010,14 +1021,128 @@
 		.status-select {
 			width: 100%;
 			min-width: auto;
+			padding: 0.75rem;
+			font-size: 1rem;
 		}
 
 		.search-container {
 			width: 100%;
 		}
+		
+		.search-input {
+			padding: 0.75rem 2.5rem 0.75rem 1rem;
+			font-size: 1rem;
+		}
+
+		.members-table-container {
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+			border-radius: var(--radius-md);
+		}
+
+		.members-table {
+			min-width: 700px;
+			font-size: 0.9rem;
+		}
+		
+		.members-table th,
+		.members-table td {
+			padding: 0.75rem 0.5rem;
+		}
+		
+		.members-table th {
+			font-size: 0.85rem;
+		}
+		
+		.status-badge {
+			padding: 0.2rem 0.4rem;
+			font-size: 0.7rem;
+		}
+		
+		.btn-sm {
+			padding: 0.4rem 0.8rem;
+			font-size: 0.8rem;
+		}
 
 		.form-actions {
 			flex-direction: column;
+			gap: 0.75rem;
+		}
+		
+		.form-control {
+			padding: 0.875rem;
+			font-size: 1rem;
+		}
+		
+		.member-form-content {
+			gap: 1.25rem;
+		}
+	}
+	
+	@media (max-width: 480px) {
+		.members-page {
+			padding: 0.5rem 0.25rem;
+		}
+		
+		.page-header {
+			margin-bottom: 1.5rem;
+			gap: 1rem;
+		}
+		
+		.header-content h1 {
+			font-size: 1.75rem;
+		}
+		
+		.page-subtitle {
+			font-size: 0.9rem;
+		}
+		
+		.card-header h2 {
+			font-size: 1.1rem;
+		}
+		
+		.members-table {
+			min-width: 600px;
+			font-size: 0.85rem;
+		}
+		
+		.members-table th,
+		.members-table td {
+			padding: 0.6rem 0.4rem;
+		}
+		
+		.status-badge {
+			padding: 0.15rem 0.3rem;
+			font-size: 0.65rem;
+		}
+		
+		.btn-sm {
+			padding: 0.35rem 0.6rem;
+			font-size: 0.75rem;
+		}
+		
+		.empty-state {
+			padding: 2rem 0.5rem;
+		}
+		
+		.empty-icon {
+			font-size: 3rem;
+		}
+		
+		.date-input,
+		.status-select {
+			padding: 0.75rem;
+			font-size: 1rem;
+		}
+		
+		.search-input {
+			padding: 0.75rem 2.5rem 0.75rem 1rem;
+			font-size: 1rem;
+		}
+		
+		.form-control {
+			padding: 0.875rem;
+			font-size: 1rem;
 		}
 	}
 

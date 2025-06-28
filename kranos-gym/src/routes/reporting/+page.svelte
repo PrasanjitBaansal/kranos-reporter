@@ -788,22 +788,229 @@
 		}
 	}
 	
-	@media (max-width: 640px) {
+	@media (max-width: 768px) {
+		.reporting-container {
+			gap: 1.5rem;
+		}
+		
+		.report-type-selector {
+			padding: 1rem;
+		}
+		
+		.type-buttons {
+			flex-direction: column;
+			gap: 0.75rem;
+		}
+		
+		.type-btn {
+			padding: 1.25rem 1.5rem;
+			min-width: unset;
+			max-width: none;
+		}
+		
+		.type-icon {
+			font-size: 1.75rem;
+		}
+		
+		.type-label {
+			font-size: 1rem;
+		}
+		
+		.report-controls {
+			padding: 1rem;
+		}
+		
+		.controls-section {
+			flex-direction: column;
+			gap: 1.25rem;
+		}
+		
+		.date-range h3, .export-section h3 {
+			font-size: 1rem;
+		}
+		
+		.date-inputs {
+			flex-direction: column;
+			gap: 0.75rem;
+		}
+		
+		.export-controls {
+			flex-direction: column;
+			gap: 0.75rem;
+		}
+		
 		.financial-summary, .renewals-summary {
 			grid-template-columns: 1fr;
+			gap: 1rem;
+		}
+		
+		.summary-card {
+			padding: 1.25rem;
+		}
+		
+		.summary-value {
+			font-size: 1.75rem;
+		}
+		
+		.summary-breakdown {
+			flex-direction: column;
+			gap: 0.5rem;
+		}
+		
+		.header {
+			padding: 1rem;
+		}
+		
+		.header h2 {
+			font-size: 1.1rem;
 		}
 		
 		.table-container {
 			padding: 1rem;
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
 		}
 		
 		.financial-table, .renewals-table {
+			min-width: 700px;
+			font-size: 0.85rem;
+		}
+		
+		.financial-table th, .renewals-table th {
+			padding: 0.75rem 0.5rem;
 			font-size: 0.8rem;
 		}
 		
-		.financial-table th, .renewals-table th,
 		.financial-table td, .renewals-table td {
 			padding: 0.75rem 0.5rem;
+		}
+		
+		.transaction-type, .renewal-status {
+			font-size: 0.7rem;
+			padding: 0.2rem 0.4rem;
+		}
+		
+		.empty-state {
+			padding: 2rem 1rem;
+		}
+		
+		.empty-icon {
+			font-size: 2.5rem;
+		}
+	}
+	
+	@media (max-width: 480px) {
+		.reporting-container {
+			gap: 1rem;
+		}
+		
+		.report-type-selector {
+			padding: 0.75rem;
+		}
+		
+		.type-buttons {
+			gap: 0.5rem;
+		}
+		
+		.type-btn {
+			padding: 1rem 1.25rem;
+		}
+		
+		.type-icon {
+			font-size: 1.5rem;
+		}
+		
+		.type-label {
+			font-size: 0.9rem;
+		}
+		
+		.report-controls {
+			padding: 0.75rem;
+		}
+		
+		.controls-section {
+			gap: 1rem;
+		}
+		
+		.date-range h3, .export-section h3 {
+			font-size: 0.95rem;
+		}
+		
+		.form-group label {
+			font-size: 0.85rem;
+		}
+		
+		.form-control {
+			padding: 0.75rem;
+			font-size: 1rem;
+		}
+		
+		.financial-summary, .renewals-summary {
+			gap: 0.75rem;
+		}
+		
+		.summary-card {
+			padding: 1rem;
+		}
+		
+		.summary-header h3 {
+			font-size: 0.9rem;
+		}
+		
+		.summary-value {
+			font-size: 1.5rem;
+		}
+		
+		.summary-breakdown {
+			font-size: 0.8rem;
+		}
+		
+		.header {
+			padding: 0.75rem;
+		}
+		
+		.header h2 {
+			font-size: 1rem;
+		}
+		
+		.table-container {
+			padding: 0.75rem;
+		}
+		
+		.financial-table, .renewals-table {
+			min-width: 600px;
+			font-size: 0.8rem;
+		}
+		
+		.financial-table th, .renewals-table th {
+			padding: 0.6rem 0.4rem;
+			font-size: 0.75rem;
+		}
+		
+		.financial-table td, .renewals-table td {
+			padding: 0.6rem 0.4rem;
+		}
+		
+		.transaction-type, .renewal-status {
+			font-size: 0.65rem;
+			padding: 0.15rem 0.3rem;
+		}
+		
+		.empty-state {
+			padding: 1.5rem 0.5rem;
+		}
+		
+		.empty-icon {
+			font-size: 2rem;
+		}
+		
+		.loading-container {
+			padding: 3rem 1rem;
+		}
+		
+		.loading-spinner {
+			width: 40px;
+			height: 40px;
 		}
 	}
 </style>
