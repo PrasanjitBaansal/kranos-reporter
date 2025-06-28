@@ -6,7 +6,7 @@ CREATE TABLE members (
     phone TEXT NOT NULL UNIQUE,
     email TEXT,
     join_date TEXT,
-    status TEXT NOT NULL DEFAULT 'Active' CHECK (status IN ('Active', 'Inactive', 'Deleted'))
+    status TEXT NOT NULL DEFAULT 'Active' CHECK (status IN ('Active', 'Inactive', 'Deleted', 'New'))
 );
 
 CREATE TABLE group_plans (

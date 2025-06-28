@@ -23,7 +23,7 @@ export const actions = {
             phone: data.get('phone'),
             email: data.get('email') || null,
             join_date: data.get('join_date') || new Date().toISOString().split('T')[0],
-            status: 'Inactive' // Status is automatically managed
+            status: 'New' // New members start with 'New' status
         };
 
         try {

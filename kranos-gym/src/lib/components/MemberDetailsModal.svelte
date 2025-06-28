@@ -1,52 +1,60 @@
 <script>
 	import Modal from './Modal.svelte';
-	import { onMount } from 'svelte';
 
 	export let show = false;
 	export let member = null;
 	
-	$: console.log('Modal show state:', show);
-	$: console.log('Modal member data:', member);
-
 	let membershipHistory = [];
-	let loading = true;
+	let loading = false;
 	let renewalsCount = 0;
 	let totalAmountPaid = 0;
 
-	$: if (show && member) {
-		loadMembershipHistory();
+	$: {
+		if (show && member && member.id) {
+			loadMembershipHistory();
+		} else if (!show) {
+			// Reset data when modal is closed
+			membershipHistory = [];
+			renewalsCount = 0;
+			totalAmountPaid = 0;
+			loading = false;
+		}
 	}
 
 	async function loadMembershipHistory() {
 		if (!member?.id) {
-			console.log('No member ID found');
 			return;
 		}
 		
-		console.log('Loading membership history for member:', member.id);
 		loading = true;
+		membershipHistory = [];
+		renewalsCount = 0;
+		totalAmountPaid = 0;
+		
 		try {
 			const response = await fetch(`/api/members/${member.id}/memberships`);
-			console.log('API response status:', response.status);
+			
 			if (response.ok) {
 				const data = await response.json();
-				console.log('API response data:', data);
-				membershipHistory = data.memberships || [];
-				console.log('Loaded membership history:', membershipHistory);
-				renewalsCount = membershipHistory.filter(m => m.membership_type === 'Renewal').length;
-				totalAmountPaid = membershipHistory.reduce((sum, m) => sum + (m.amount_paid || 0), 0);
+				
+				if (data.memberships && Array.isArray(data.memberships)) {
+					membershipHistory = data.memberships;
+					renewalsCount = membershipHistory.filter(m => m.membership_type === 'Renewal').length;
+					totalAmountPaid = membershipHistory.reduce((sum, m) => sum + (m.amount_paid || 0), 0);
+				} else {
+					membershipHistory = [];
+				}
 			} else {
-				console.log('API response not ok:', response.status);
 				membershipHistory = [];
 				renewalsCount = 0;
 				totalAmountPaid = 0;
 			}
 		} catch (error) {
-			console.error('Error loading membership history:', error);
 			membershipHistory = [];
 			renewalsCount = 0;
 			totalAmountPaid = 0;
 		}
+		
 		loading = false;
 	}
 

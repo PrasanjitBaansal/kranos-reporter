@@ -251,7 +251,7 @@ function calculatePlanDefaultAmounts(gcData) {
     return planAmounts;
 }
 
-export function migrateFromExcel(excelPath = '../static/data/Kranos MMA Members.xlsx') {
+export function migrateFromExcel(excelPath = 'static/data/Kranos MMA Members.xlsx') {
     try {
         console.log('🚀 Starting clean slate migration from Excel...');
         console.log(`Excel file path: ${excelPath}`);

@@ -19,6 +19,8 @@
 	let joinDateFrom = '';
 	let joinDateTo = '';
 	let statusFilter = 'all'; // 'all', 'active', 'inactive'
+	let sortField = 'join_date';
+	let sortDirection = 'desc'; // 'asc' or 'desc'
 
 	$: members = data.members || [];
 	$: filteredMembers = members.filter(member => {
@@ -44,6 +46,14 @@
 			(statusFilter === 'new' && member.status === 'New');
 		
 		return matchesSearch && matchesDateRange && matchesStatus;
+	}).sort((a, b) => {
+		if (sortField === 'join_date') {
+			// Convert to proper Date objects for sorting
+			const dateA = parseDateForSorting(a.join_date);
+			const dateB = parseDateForSorting(b.join_date);
+			return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+		}
+		return 0;
 	});
 
 	function editMember(member) {
@@ -90,6 +100,61 @@
 		joinDateTo = '';
 		statusFilter = 'all';
 		searchTerm = '';
+	}
+
+	function handleSort(field) {
+		if (sortField === field) {
+			// Toggle direction if same field
+			sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+		} else {
+			// New field, default to descending for dates
+			sortField = field;
+			sortDirection = 'desc';
+		}
+	}
+
+	function formatDateForDisplay(dateString) {
+		if (!dateString) return '';
+		// Handle both YYYY-MM-DD and DD/MM/YYYY formats
+		let date;
+		if (dateString.includes('/')) {
+			// Already in DD/MM/YYYY format
+			const [day, month, year] = dateString.split('/');
+			date = new Date(year, month - 1, day);
+		} else {
+			// YYYY-MM-DD format
+			date = new Date(dateString);
+		}
+		
+		if (isNaN(date.getTime())) return dateString; // Return original if invalid
+		
+		const day = date.getDate().toString().padStart(2, '0');
+		const month = (date.getMonth() + 1).toString().padStart(2, '0');
+		const year = date.getFullYear();
+		return `${day}/${month}/${year}`;
+	}
+
+	function parseDateForSorting(dateString) {
+		if (!dateString) return new Date(0); // Return epoch for empty dates
+		
+		// Handle both YYYY-MM-DD and DD/MM/YYYY formats
+		if (dateString.includes('/')) {
+			// DD/MM/YYYY or DD-MM-YYYY format
+			const parts = dateString.split(/[-\/]/);
+			if (parts.length === 3) {
+				const day = parseInt(parts[0]);
+				const month = parseInt(parts[1]);
+				const year = parseInt(parts[2]);
+				return new Date(year, month - 1, day);
+			}
+		} else {
+			// YYYY-MM-DD format
+			return new Date(dateString);
+		}
+		
+		// Fallback - try native parsing
+		const date = new Date(dateString);
+		return isNaN(date.getTime()) ? new Date(0) : date;
 	}
 
 	function validateForm(formData) {
@@ -193,45 +258,47 @@
 					<span class="member-count">({filteredMembers.length})</span>
 				</h2>
 				<div class="filters-container">
-					<!-- Date Range Filter -->
-					<div class="filter-group">
-						<label class="filter-label" for="joinDateFrom">📅 Join Date:</label>
-						<div class="date-range">
-							<input
-								id="joinDateFrom"
-								type="date"
-								bind:value={joinDateFrom}
-								class="date-input"
-								placeholder="From"
-								aria-label="From date"
-							/>
-							<span class="date-separator">to</span>
-							<input
-								id="joinDateTo"
-								type="date"
-								bind:value={joinDateTo}
-								class="date-input"
-								placeholder="To"
-								aria-label="To date"
-							/>
+					<div class="filters-left">
+						<!-- Date Range Filter -->
+						<div class="filter-group">
+							<label class="filter-label" for="joinDateFrom">📅 Join Date:</label>
+							<div class="date-range">
+								<input
+									id="joinDateFrom"
+									type="date"
+									bind:value={joinDateFrom}
+									class="date-input"
+									placeholder="From"
+									aria-label="From date"
+								/>
+								<span class="date-separator">to</span>
+								<input
+									id="joinDateTo"
+									type="date"
+									bind:value={joinDateTo}
+									class="date-input"
+									placeholder="To"
+									aria-label="To date"
+								/>
+							</div>
 						</div>
-					</div>
 
-					<!-- Status Filter -->
-					<div class="filter-group">
-						<label class="filter-label" for="statusFilter">🎯 Status:</label>
-						<select id="statusFilter" bind:value={statusFilter} class="status-select">
-							<option value="all">All Members</option>
-							<option value="active">Active Only</option>
-							<option value="inactive">Inactive Only</option>
-							<option value="new">New Only</option>
-						</select>
-					</div>
+						<!-- Status Filter -->
+						<div class="filter-group">
+							<label class="filter-label" for="statusFilter">🎯 Status:</label>
+							<select id="statusFilter" bind:value={statusFilter} class="status-select">
+								<option value="all">All Members</option>
+								<option value="active">Active Only</option>
+								<option value="inactive">Inactive Only</option>
+								<option value="new">New Only</option>
+							</select>
+						</div>
 
-					<!-- Clear Filters -->
-					<button class="btn btn-secondary btn-sm" on:click={clearFilters}>
-						🔄 Clear
-					</button>
+						<!-- Clear Filters -->
+						<button class="btn btn-secondary btn-sm" on:click={clearFilters}>
+							🔄 Clear
+						</button>
+					</div>
 
 					<!-- Search -->
 					<div class="search-container">
@@ -262,7 +329,14 @@
 								<th>Name</th>
 								<th>Phone</th>
 								<th>Email</th>
-								<th>Join Date</th>
+								<th class="sortable" on:click={() => handleSort('join_date')}>
+									Join Date
+									{#if sortField === 'join_date'}
+										<span class="sort-indicator">
+											{sortDirection === 'asc' ? '▲' : '▼'}
+										</span>
+									{/if}
+								</th>
 								<th>Status</th>
 								<th>Actions</th>
 							</tr>
@@ -280,7 +354,7 @@
 										{member.email || '-'}
 									</td>
 									<td class="member-join-date">
-										{member.join_date}
+										{formatDateForDisplay(member.join_date)}
 									</td>
 									<td class="member-status">
 										{#if member.status === 'Active'}
@@ -792,6 +866,15 @@
 	.filters-container {
 		display: flex;
 		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		flex-wrap: wrap;
+		min-width: 0;
+	}
+
+	.filters-left {
+		display: flex;
+		align-items: center;
 		gap: 1rem;
 		flex-wrap: wrap;
 		min-width: 0;
@@ -859,7 +942,22 @@
 
 	.search-container {
 		min-width: 200px;
-		flex: 1;
+	}
+
+	.sortable {
+		cursor: pointer;
+		user-select: none;
+		transition: color 0.2s ease;
+	}
+
+	.sortable:hover {
+		color: var(--primary);
+	}
+
+	.sort-indicator {
+		margin-left: 0.5rem;
+		font-size: 0.8rem;
+		color: var(--primary);
 	}
 
 	@media (max-width: 768px) {
@@ -882,6 +980,14 @@
 		}
 
 		.filters-container {
+			flex-direction: column;
+			align-items: stretch;
+			width: 100%;
+			gap: 1rem;
+			justify-content: flex-start;
+		}
+
+		.filters-left {
 			flex-direction: column;
 			align-items: stretch;
 			width: 100%;

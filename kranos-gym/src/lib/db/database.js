@@ -155,7 +155,7 @@ class Database {
 
     async createMember(member) {
         await this.ensureConnection();
-        const { name, phone, email, join_date, status = 'Inactive' } = member;
+        const { name, phone, email, join_date, status = 'New' } = member;
         return new Promise((resolve, reject) => {
             this.db.run(
                 'INSERT INTO members (name, phone, email, join_date, status) VALUES (?, ?, ?, ?, ?)',
@@ -231,6 +231,23 @@ class Database {
                     resolve(row);
                 }
             });
+        });
+    }
+
+    async getGroupPlanByNameAndDuration(name, duration_days) {
+        await this.ensureConnection();
+        return new Promise((resolve, reject) => {
+            this.db.get(
+                'SELECT * FROM group_plans WHERE name = ? AND duration_days = ? AND status != "Deleted"', 
+                [name, duration_days], 
+                (err, row) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(row);
+                    }
+                }
+            );
         });
     }
 
@@ -516,61 +533,61 @@ class Database {
         await this.ensureConnection();
         
         try {
-            // First check if member has any memberships at all (GC or PT)
-            const hasAnyMemberships = await this.hasExistingMemberships(memberId);
-            
-            let newStatus;
-            if (!hasAnyMemberships) {
-                // No memberships at all = "Inactive" status
-                newStatus = 'Inactive';
-            } else {
-                // Has memberships, check if any are currently active
-                return new Promise((resolve, reject) => {
-                    const checkQuery = `
-                        SELECT COUNT(*) as active_count
-                        FROM group_class_memberships gcm
-                        WHERE gcm.member_id = ? 
-                        AND gcm.status = 'Active'
-                        AND DATE('now') BETWEEN gcm.start_date AND gcm.end_date
-                    `;
-                    
-                    this.db.get(checkQuery, [memberId], (err, result) => {
-                        if (err) {
-                            reject(err);
-                            return;
-                        }
-                        
-                        const statusBasedOnActivity = result.active_count > 0 ? 'Active' : 'Inactive';
-                        
-                        // Update member status
-                        this.db.run(
-                            'UPDATE members SET status = ? WHERE id = ? AND status != \'Deleted\'',
-                            [statusBasedOnActivity, memberId],
-                            function(updateErr) {
-                                if (updateErr) {
-                                    reject(updateErr);
-                                } else {
-                                    resolve({ memberId, status: statusBasedOnActivity, changes: this.changes });
-                                }
-                            }
-                        );
-                    });
-                });
-            }
-            
-            // Update member status for "New" members
             return new Promise((resolve, reject) => {
-                this.db.run(
-                    'UPDATE members SET status = ? WHERE id = ? AND status != \'Deleted\'',
-                    [newStatus, memberId],
-                    function(updateErr) {
-                        if (updateErr) {
-                            reject(updateErr);
-                        } else {
-                            resolve({ memberId, status: newStatus, changes: this.changes });
-                        }
+                // Get member details and membership info in one query
+                const memberQuery = `
+                    SELECT 
+                        m.id,
+                        m.join_date,
+                        COUNT(gcm.id) as total_memberships,
+                        COUNT(CASE WHEN gcm.status = 'Active' AND DATE('now') BETWEEN gcm.start_date AND gcm.end_date THEN 1 END) as active_memberships,
+                        JULIANDAY('now') - JULIANDAY(m.join_date) as days_since_join
+                    FROM members m
+                    LEFT JOIN group_class_memberships gcm ON m.id = gcm.member_id
+                    WHERE m.id = ? AND m.status != 'Deleted'
+                    GROUP BY m.id, m.join_date
+                `;
+                
+                this.db.get(memberQuery, [memberId], (err, result) => {
+                    if (err) {
+                        reject(err);
+                        return;
                     }
-                );
+                    
+                    if (!result) {
+                        reject(new Error('Member not found'));
+                        return;
+                    }
+                    
+                    let newStatus;
+                    
+                    // Determine status based on membership activity and join date
+                    if (result.active_memberships > 0) {
+                        newStatus = 'Active';
+                    } else if (result.total_memberships === 0 && result.days_since_join <= 30) {
+                        // No memberships but joined within last 30 days = "New"
+                        newStatus = 'New';
+                    } else if (result.total_memberships === 0) {
+                        // No memberships and joined more than 30 days ago = "Inactive"
+                        newStatus = 'Inactive';
+                    } else {
+                        // Has memberships but none are currently active = "Inactive"
+                        newStatus = 'Inactive';
+                    }
+                    
+                    // Update member status
+                    this.db.run(
+                        'UPDATE members SET status = ? WHERE id = ? AND status != \'Deleted\'',
+                        [newStatus, memberId],
+                        function(updateErr) {
+                            if (updateErr) {
+                                reject(updateErr);
+                            } else {
+                                resolve({ memberId, status: newStatus, changes: this.changes });
+                            }
+                        }
+                    );
+                });
             });
             
         } catch (error) {

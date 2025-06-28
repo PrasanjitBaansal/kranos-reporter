@@ -218,18 +218,46 @@ export const actions = {
     },
 
     getMemberHistory: async ({ request }) => {
+        console.log('🔄 getMemberHistory action called');
+        
         const data = await request.formData();
         const memberId = parseInt(data.get('member_id'));
+        
+        console.log('📋 Received member_id:', data.get('member_id'), 'parsed as:', memberId);
+        
+        if (!memberId || isNaN(memberId)) {
+            console.log('❌ Invalid member ID:', memberId);
+            return {
+                type: 'success',
+                data: { success: false, error: 'Invalid member ID' }
+            };
+        }
+        
         const db = new Database();
 
         try {
             await db.connect();
             const history = await db.getGroupClassMembershipsByMemberId(memberId);
-            return { success: true, history };
+            console.log(`getMemberHistory: Found ${history.length} memberships for member ${memberId}`);
+            
+            console.log('📤 Returning data:', { success: true, history });
+            // Return in the format expected by SvelteKit form actions
+            return {
+                type: 'success',
+                data: { success: true, history }
+            };
         } catch (error) {
-            return { success: false, error: error.message };
+            console.error('getMemberHistory error:', error);
+            return {
+                type: 'success', 
+                data: { success: false, error: error.message || 'Database connection failed' }
+            };
         } finally {
-            await db.close();
+            try {
+                await db.close();
+            } catch (closeError) {
+                console.error('Error closing database:', closeError);
+            }
         }
     }
 };

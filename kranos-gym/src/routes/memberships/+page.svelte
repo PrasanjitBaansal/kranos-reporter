@@ -310,6 +310,7 @@
 	}
 	
 	async function showMemberHistory(memberId, memberName) {
+		console.log('👤 showMemberHistory called with:', { memberId, memberName });
 		selectedMemberForHistory = { id: memberId, name: memberName };
 		showHistoryModal = true;
 		historyLoading = true;
@@ -317,22 +318,30 @@
 		try {
 			const formData = new FormData();
 			formData.append('member_id', memberId.toString());
+			console.log('📤 Sending request to getMemberHistory with member_id:', memberId);
 			
-			const response = await fetch('/memberships?/getMemberHistory', {
+			const response = await fetch('?/getMemberHistory', {
 				method: 'POST',
 				body: formData
 			});
 			
+			console.log('📥 Response status:', response.status);
+			console.log('📥 Response ok:', response.ok);
+			
 			if (response.ok) {
 				const result = await response.json();
+				console.log('📋 Response data:', result);
 				if (result.type === 'success' && result.data?.success) {
 					selectedMemberHistory = result.data.history || [];
+					console.log('✅ Successfully set history:', selectedMemberHistory.length, 'items');
 				} else {
 					selectedMemberHistory = [];
+					console.log('❌ Server returned error:', result.data?.error);
 					showError('Failed to load membership history: ' + (result.data?.error || 'Unknown error'));
 				}
 			} else {
 				selectedMemberHistory = [];
+				console.log('❌ HTTP error:', response.status);
 				showError('Failed to load membership history: HTTP ' + response.status);
 			}
 		} catch (error) {
@@ -379,10 +388,18 @@
 					<span class="section-icon">{membershipType === 'group_class' ? '🎯' : '🏋️'}</span>
 					{membershipType === 'group_class' ? 'Group Class' : 'Personal Training'} Memberships
 				</h2>
-				<button class="btn btn-primary" on:click={openModal}>
-					<span>➕</span>
-					Add {membershipType === 'group_class' ? 'Group Class' : 'PT'} Membership
-				</button>
+				<div class="header-buttons">
+					{#if membershipType === 'group_class'}
+						<a href="/memberships/bulk-import" class="btn btn-secondary">
+							<span>📁</span>
+							Bulk Import
+						</a>
+					{/if}
+					<button class="btn btn-primary" on:click={openModal}>
+						<span>➕</span>
+						Add {membershipType === 'group_class' ? 'Group Class' : 'PT'} Membership
+					</button>
+				</div>
 			</div>
 			
 			<div class="filters-container">
@@ -912,6 +929,12 @@
 		gap: 0.75rem;
 		font-size: 1.3rem;
 		font-weight: 600;
+	}
+	
+	.header-buttons {
+		display: flex;
+		gap: 1rem;
+		align-items: center;
 	}
 	
 	.section-icon {

@@ -1,9 +1,8 @@
 import { json } from '@sveltejs/kit';
 import Database from '$lib/db/database.js';
 
-const db = new Database();
-
 export async function GET({ params }) {
+	const db = new Database();
 	try {
 		const memberId = parseInt(params.id);
 		
@@ -11,11 +10,18 @@ export async function GET({ params }) {
 			return json({ error: 'Invalid member ID' }, { status: 400 });
 		}
 
+		console.log(`API: Fetching memberships for member ID: ${memberId}`);
+		
+		// Ensure database connection before querying
+		await db.connect();
+
 		// Get both group class and PT memberships for the member
 		const [gcMemberships, ptMemberships] = await Promise.all([
 			db.getGroupClassMembershipsByMemberId(memberId),
 			db.getPTMembershipsByMemberId(memberId)
 		]);
+
+		console.log(`API: Found ${gcMemberships.length} GC and ${ptMemberships.length} PT memberships`);
 
 		// Combine and format memberships
 		const allMemberships = [
@@ -42,12 +48,20 @@ export async function GET({ params }) {
 			return dateB - dateA;
 		});
 
+		console.log(`API: Returning ${allMemberships.length} total memberships`);
+
 		return json({
 			memberships: allMemberships
 		});
 
 	} catch (error) {
-		console.error('Error fetching member memberships:', error);
+		console.error('API Error fetching member memberships:', error);
 		return json({ error: 'Failed to fetch membership history' }, { status: 500 });
+	} finally {
+		try {
+			await db.close();
+		} catch (closeError) {
+			console.error('API Error closing database:', closeError);
+		}
 	}
 }
