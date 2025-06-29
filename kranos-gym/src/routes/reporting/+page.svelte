@@ -27,11 +27,21 @@
 	async function loadFinancialReport() {
 		isLoading = true;
 		try {
-			const response = await fetch(`/api/reports/financial?start=${dateRange.start}&end=${dateRange.end}`);
+			// Context7-grounded: Use enhanced financial report with expense integration
+			const response = await fetch(`/api/reports/financial-enhanced?start=${dateRange.start}&end=${dateRange.end}`);
 			if (response.ok) {
 				const result = await response.json();
 				if (result.success) {
 					financialData = result;
+				}
+			} else {
+				// Fallback to original API if enhanced is not available
+				const fallbackResponse = await fetch(`/api/reports/financial?start=${dateRange.start}&end=${dateRange.end}`);
+				if (fallbackResponse.ok) {
+					const fallbackResult = await fallbackResponse.json();
+					if (fallbackResult.success) {
+						financialData = fallbackResult;
+					}
 				}
 			}
 		} catch (error) {
@@ -204,27 +214,54 @@
 				</div>
 			{:else if financialData}
 				<div class="financial-summary">
+					<!-- Context7-grounded: Enhanced financial metrics with expenses -->
 					<div class="summary-card total-revenue">
 						<div class="summary-header">
 							<span class="summary-icon">💰</span>
 							<h3>Total Revenue</h3>
 						</div>
-						<div class="summary-value">{formatCurrency(financialData.total_revenue)}</div>
+						<div class="summary-value">{formatCurrency(financialData.income?.total || financialData.total_revenue)}</div>
 						<div class="summary-breakdown">
-							<span>GC: {formatCurrency(financialData.gc_revenue)}</span>
-							<span>PT: {formatCurrency(financialData.pt_revenue)}</span>
+							{#if financialData.income?.data}
+								{#each financialData.income.data as incomeItem}
+									<span>{incomeItem.type}: {formatCurrency(incomeItem.total_amount)}</span>
+								{/each}
+							{:else}
+								<span>GC: {formatCurrency(financialData.gc_revenue)}</span>
+								<span>PT: {formatCurrency(financialData.pt_revenue)}</span>
+							{/if}
 						</div>
 					</div>
 					
-					<div class="summary-card total-transactions">
+					<div class="summary-card total-expenses">
+						<div class="summary-header">
+							<span class="summary-icon">💸</span>
+							<h3>Total Expenses</h3>
+						</div>
+						<div class="summary-value expense-value">{formatCurrency(financialData.expenses?.total || 0)}</div>
+						<div class="summary-breakdown">
+							{#if financialData.summary?.expenseRatio}
+								<span>Expense Ratio: {financialData.summary.expenseRatio}%</span>
+							{:else}
+								<span>No expense data</span>
+							{/if}
+						</div>
+					</div>
+					
+					<div class="summary-card net-profit">
 						<div class="summary-header">
 							<span class="summary-icon">📊</span>
-							<h3>Total Transactions</h3>
+							<h3>Net Profit</h3>
 						</div>
-						<div class="summary-value">{financialData.total_transactions}</div>
+						<div class="summary-value {(financialData.summary?.netProfit || 0) >= 0 ? 'profit' : 'loss'}">
+							{formatCurrency(financialData.summary?.netProfit || (financialData.total_revenue || 0))}
+						</div>
 						<div class="summary-breakdown">
-							<span>GC: {financialData.gc_transactions}</span>
-							<span>PT: {financialData.pt_transactions}</span>
+							{#if financialData.summary?.profitMargin}
+								<span>Margin: {financialData.summary.profitMargin}%</span>
+							{:else}
+								<span>Transactions: {financialData.total_transactions || 0}</span>
+							{/if}
 						</div>
 					</div>
 					
@@ -239,6 +276,28 @@
 						</div>
 					</div>
 				</div>
+				
+				<!-- Context7-grounded: Expense breakdown section -->
+				{#if financialData.expenses?.data && financialData.expenses.data.length > 0}
+					<div class="expense-breakdown card">
+						<div class="header">
+							<h2>
+								<span class="section-icon">💸</span>
+								Expense Categories
+							</h2>
+						</div>
+						
+						<div class="expense-categories">
+							{#each financialData.expenses.data as expense}
+								<div class="expense-category">
+									<div class="category-name">{expense.category}</div>
+									<div class="category-amount">{formatCurrency(expense.total_amount)}</div>
+									<div class="category-count">{expense.count} transactions</div>
+								</div>
+							{/each}
+						</div>
+					</div>
+				{/if}
 				
 				<div class="financial-details card">
 					<div class="header">
@@ -1019,6 +1078,112 @@
 		.loading-spinner {
 			width: 40px;
 			height: 40px;
+		}
+	}
+
+	/* Context7-grounded: Expense integration styles */
+	.total-expenses .summary-icon { 
+		color: var(--error); 
+	}
+
+	.net-profit .summary-icon { 
+		color: var(--success); 
+	}
+
+	.summary-value.expense-value {
+		color: var(--error);
+		text-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+	}
+
+	.summary-value.profit {
+		color: var(--success);
+		text-shadow: 0 0 10px rgba(74, 222, 128, 0.3);
+	}
+
+	.summary-value.loss {
+		color: var(--error);
+		text-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+	}
+
+	.expense-breakdown {
+		margin-bottom: 2rem;
+	}
+
+	.expense-categories {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: 1rem;
+		padding: 1.5rem;
+	}
+
+	.expense-category {
+		background: var(--surface-light);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		padding: 1rem;
+		text-align: center;
+		transition: var(--transition-fast);
+	}
+
+	.expense-category:hover {
+		border-color: var(--primary);
+		transform: translateY(-2px);
+		box-shadow: 0 4px 15px rgba(243, 148, 7, 0.2);
+	}
+
+	.category-name {
+		font-weight: 600;
+		color: var(--text);
+		margin-bottom: 0.5rem;
+		font-size: 0.9rem;
+	}
+
+	.category-amount {
+		font-size: 1.25rem;
+		font-weight: 700;
+		color: var(--error);
+		margin-bottom: 0.25rem;
+	}
+
+	.category-count {
+		font-size: 0.8rem;
+		color: var(--text-muted);
+	}
+
+	@media (max-width: 768px) {
+		.expense-categories {
+			grid-template-columns: 1fr;
+			padding: 1rem;
+		}
+
+		.expense-category {
+			padding: 0.75rem;
+		}
+
+		.category-amount {
+			font-size: 1.1rem;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.expense-categories {
+			padding: 0.75rem;
+		}
+
+		.expense-category {
+			padding: 0.6rem;
+		}
+
+		.category-name {
+			font-size: 0.85rem;
+		}
+
+		.category-amount {
+			font-size: 1rem;
+		}
+
+		.category-count {
+			font-size: 0.75rem;
 		}
 	}
 </style>

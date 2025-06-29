@@ -667,6 +667,369 @@ class KranosSQLite {
         `);
         return stmt.all(todayStr, futureDateStr, 'Active');
     }
+
+    // Context7-grounded: Payments Management System Methods
+    
+    // Expenses CRUD Operations
+    getExpenses(filters = {}) {
+        this.connect();
+        
+        let query = `
+            SELECT * FROM expenses 
+            WHERE status != 'Cancelled'
+        `;
+        const params = [];
+        
+        // Apply filters with parameterized queries for security
+        if (filters.category) {
+            query += ` AND category = ?`;
+            params.push(filters.category);
+        }
+        
+        if (filters.startDate && filters.endDate) {
+            query += ` AND payment_date BETWEEN ? AND ?`;
+            params.push(filters.startDate, filters.endDate);
+        } else if (filters.startDate) {
+            query += ` AND payment_date >= ?`;
+            params.push(filters.startDate);
+        } else if (filters.endDate) {
+            query += ` AND payment_date <= ?`;
+            params.push(filters.endDate);
+        }
+        
+        if (filters.recipient) {
+            query += ` AND recipient LIKE ?`;
+            params.push(`%${filters.recipient}%`);
+        }
+        
+        if (filters.paymentMethod) {
+            query += ` AND payment_method = ?`;
+            params.push(filters.paymentMethod);
+        }
+        
+        query += ` ORDER BY payment_date DESC, created_at DESC`;
+        
+        const stmt = this.prepare(query);
+        return stmt.all(...params);
+    }
+
+    getExpenseById(id) {
+        this.connect();
+        const stmt = this.prepare('SELECT * FROM expenses WHERE id = ?');
+        return stmt.get(id);
+    }
+
+    createExpense(expense) {
+        this.connect();
+        const { 
+            amount, category, description, payment_date, 
+            payment_method = 'Bank Transfer', recipient, status = 'Paid' 
+        } = expense;
+        
+        const stmt = this.prepare(`
+            INSERT INTO expenses (amount, category, description, payment_date, payment_method, recipient, status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `);
+        
+        const result = stmt.run(amount, category, description, payment_date, payment_method, recipient, status);
+        return { id: result.lastInsertRowid, ...expense };
+    }
+
+    updateExpense(id, expense) {
+        this.connect();
+        const { 
+            amount, category, description, payment_date, 
+            payment_method, recipient, status 
+        } = expense;
+        
+        const stmt = this.prepare(`
+            UPDATE expenses 
+            SET amount = ?, category = ?, description = ?, payment_date = ?, 
+                payment_method = ?, recipient = ?, status = ?, updated_at = CURRENT_TIMESTAMP 
+            WHERE id = ?
+        `);
+        
+        const result = stmt.run(amount, category, description, payment_date, payment_method, recipient, status, id);
+        return { changes: result.changes };
+    }
+
+    deleteExpense(id) {
+        this.connect();
+        // Context7-grounded: Soft delete pattern for audit trail
+        const stmt = this.prepare('UPDATE expenses SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+        const result = stmt.run('Cancelled', id);
+        return { changes: result.changes };
+    }
+
+    // Context7-grounded: Dynamic category retrieval for dropdown
+    getExpenseCategories() {
+        this.connect();
+        const stmt = this.prepare(`
+            SELECT DISTINCT category 
+            FROM expenses 
+            WHERE status != 'Cancelled' AND category IS NOT NULL 
+            ORDER BY category ASC
+        `);
+        return stmt.all().map(row => row.category);
+    }
+
+    // Trainer Rates Management
+    getTrainerRates(activeOnly = false) {
+        this.connect();
+        
+        let query = `
+            SELECT tr.*, m.name as trainer_name, m.phone as trainer_phone
+            FROM trainer_rates tr
+            JOIN members m ON tr.trainer_id = m.id
+        `;
+        
+        if (activeOnly) {
+            query += ` WHERE tr.status = 'Active'`;
+        } else {
+            query += ` WHERE tr.status != 'Deleted'`;
+        }
+        
+        query += ` ORDER BY m.name ASC`;
+        
+        const stmt = this.prepare(query);
+        return stmt.all();
+    }
+
+    getTrainerRateById(id) {
+        this.connect();
+        const stmt = this.prepare(`
+            SELECT tr.*, m.name as trainer_name, m.phone as trainer_phone
+            FROM trainer_rates tr
+            JOIN members m ON tr.trainer_id = m.id
+            WHERE tr.id = ?
+        `);
+        return stmt.get(id);
+    }
+
+    getTrainerRateByTrainerId(trainerId) {
+        this.connect();
+        const stmt = this.prepare(`
+            SELECT tr.*, m.name as trainer_name, m.phone as trainer_phone
+            FROM trainer_rates tr
+            JOIN members m ON tr.trainer_id = m.id
+            WHERE tr.trainer_id = ? AND tr.status = 'Active'
+        `);
+        return stmt.get(trainerId);
+    }
+
+    createTrainerRate(rate) {
+        this.connect();
+        const { trainer_id, payment_type, monthly_salary, per_session_rate, status = 'Active' } = rate;
+        
+        // Context7-grounded: Deactivate existing rates before creating new one
+        const deactivateStmt = this.prepare(`
+            UPDATE trainer_rates 
+            SET status = 'Inactive', updated_at = CURRENT_TIMESTAMP 
+            WHERE trainer_id = ? AND status = 'Active'
+        `);
+        deactivateStmt.run(trainer_id);
+        
+        const createStmt = this.prepare(`
+            INSERT INTO trainer_rates (trainer_id, payment_type, monthly_salary, per_session_rate, status) 
+            VALUES (?, ?, ?, ?, ?)
+        `);
+        
+        const result = createStmt.run(trainer_id, payment_type, monthly_salary, per_session_rate, status);
+        return { id: result.lastInsertRowid, ...rate };
+    }
+
+    updateTrainerRate(id, rate) {
+        this.connect();
+        const { trainer_id, payment_type, monthly_salary, per_session_rate, status } = rate;
+        
+        const stmt = this.prepare(`
+            UPDATE trainer_rates 
+            SET trainer_id = ?, payment_type = ?, monthly_salary = ?, per_session_rate = ?, status = ?, updated_at = CURRENT_TIMESTAMP 
+            WHERE id = ?
+        `);
+        
+        const result = stmt.run(trainer_id, payment_type, monthly_salary, per_session_rate, status, id);
+        return { changes: result.changes };
+    }
+
+    deleteTrainerRate(id) {
+        this.connect();
+        // Context7-grounded: Soft delete pattern
+        const stmt = this.prepare('UPDATE trainer_rates SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+        const result = stmt.run('Deleted', id);
+        return { changes: result.changes };
+    }
+
+    // Trainer Sessions Management
+    getTrainerSessions(trainerId = null, filters = {}) {
+        this.connect();
+        
+        let query = `
+            SELECT ts.*, m.name as trainer_name, m.phone as trainer_phone
+            FROM trainer_sessions ts
+            JOIN members m ON ts.trainer_id = m.id
+            WHERE ts.status != 'Cancelled'
+        `;
+        const params = [];
+        
+        if (trainerId) {
+            query += ` AND ts.trainer_id = ?`;
+            params.push(trainerId);
+        }
+        
+        if (filters.startDate && filters.endDate) {
+            query += ` AND ts.session_date BETWEEN ? AND ?`;
+            params.push(filters.startDate, filters.endDate);
+        }
+        
+        if (filters.status) {
+            query += ` AND ts.status = ?`;
+            params.push(filters.status);
+        }
+        
+        query += ` ORDER BY ts.session_date DESC, ts.created_at DESC`;
+        
+        const stmt = this.prepare(query);
+        return stmt.all(...params);
+    }
+
+    createTrainerSession(session) {
+        this.connect();
+        const { 
+            trainer_id, session_date, session_count, 
+            amount_per_session, status = 'Confirmed' 
+        } = session;
+        
+        const stmt = this.prepare(`
+            INSERT INTO trainer_sessions (trainer_id, session_date, session_count, amount_per_session, status) 
+            VALUES (?, ?, ?, ?, ?)
+        `);
+        
+        const result = stmt.run(trainer_id, session_date, session_count, amount_per_session, status);
+        return { id: result.lastInsertRowid, ...session };
+    }
+
+    updateTrainerSession(id, session) {
+        this.connect();
+        const { trainer_id, session_date, session_count, amount_per_session, status } = session;
+        
+        const stmt = this.prepare(`
+            UPDATE trainer_sessions 
+            SET trainer_id = ?, session_date = ?, session_count = ?, amount_per_session = ?, status = ?, updated_at = CURRENT_TIMESTAMP 
+            WHERE id = ?
+        `);
+        
+        const result = stmt.run(trainer_id, session_date, session_count, amount_per_session, status, id);
+        return { changes: result.changes };
+    }
+
+    deleteTrainerSession(id) {
+        this.connect();
+        // Context7-grounded: Soft delete pattern
+        const stmt = this.prepare('UPDATE trainer_sessions SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+        const result = stmt.run('Cancelled', id);
+        return { changes: result.changes };
+    }
+
+    // Context7-grounded: Payment Analytics and Reporting
+    getPaymentSummary(startDate = null, endDate = null) {
+        this.connect();
+        
+        let expenseQuery = `
+            SELECT 
+                COUNT(*) as total_expenses,
+                SUM(amount) as total_amount,
+                AVG(amount) as avg_amount
+            FROM expenses 
+            WHERE status = 'Paid'
+        `;
+        
+        const params = [];
+        
+        if (startDate && endDate) {
+            expenseQuery += ` AND payment_date BETWEEN ? AND ?`;
+            params.push(startDate, endDate);
+        }
+        
+        const expenseStmt = this.prepare(expenseQuery);
+        const expenseSummary = expenseStmt.get(...params);
+        
+        // Category breakdown
+        let categoryQuery = `
+            SELECT 
+                category,
+                COUNT(*) as count,
+                SUM(amount) as total_amount
+            FROM expenses 
+            WHERE status = 'Paid'
+        `;
+        
+        if (startDate && endDate) {
+            categoryQuery += ` AND payment_date BETWEEN ? AND ?`;
+        }
+        
+        categoryQuery += ` GROUP BY category ORDER BY total_amount DESC`;
+        
+        const categoryStmt = this.prepare(categoryQuery);
+        const categoryBreakdown = categoryStmt.all(...params);
+        
+        return {
+            ...expenseSummary,
+            categoryBreakdown
+        };
+    }
+
+    // Context7-grounded: Enhanced financial reporting with expenses
+    getFinancialReportWithExpenses(startDate, endDate) {
+        this.connect();
+        
+        // Get income data (existing method pattern)
+        const incomeStmt = this.prepare(`
+            SELECT 
+                'Group Class' as type,
+                COUNT(*) as count,
+                SUM(amount_paid) as total_amount
+            FROM group_class_memberships 
+            WHERE purchase_date BETWEEN ? AND ?
+            UNION ALL
+            SELECT 
+                'Personal Training' as type,
+                COUNT(*) as count,
+                SUM(amount_paid) as total_amount
+            FROM pt_memberships 
+            WHERE purchase_date BETWEEN ? AND ?
+        `);
+        const incomeData = incomeStmt.all(startDate, endDate, startDate, endDate);
+        
+        // Get expense data
+        const expenseStmt = this.prepare(`
+            SELECT 
+                category,
+                COUNT(*) as count,
+                SUM(amount) as total_amount
+            FROM expenses 
+            WHERE payment_date BETWEEN ? AND ? AND status = 'Paid'
+            GROUP BY category
+            ORDER BY total_amount DESC
+        `);
+        const expenseData = expenseStmt.all(startDate, endDate);
+        
+        // Calculate totals
+        const totalIncome = incomeData.reduce((sum, item) => sum + (item.total_amount || 0), 0);
+        const totalExpenses = expenseData.reduce((sum, item) => sum + (item.total_amount || 0), 0);
+        const netProfit = totalIncome - totalExpenses;
+        
+        return {
+            income: incomeData,
+            expenses: expenseData,
+            summary: {
+                totalIncome,
+                totalExpenses,
+                netProfit,
+                profitMargin: totalIncome > 0 ? ((netProfit / totalIncome) * 100).toFixed(2) : 0
+            }
+        };
+    }
 }
 
 export default KranosSQLite;

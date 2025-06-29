@@ -271,3 +271,277 @@ export async function GET({ params }) {
 - **MCP SERVER MANAGEMENT**: All MCP server connections must go through Docker Toolkit interface
 - **CONFIGURATION**: Docker Toolkit provides proper MCP server configuration and management
 
+## Payments Management Database Schema ✅ NEW (2025-06-29)
+
+### Payment System Tables
+
+#### expenses table
+- `id`: INTEGER, PRIMARY KEY, AUTOINCREMENT
+- `amount`: REAL, NOT NULL, CHECK (amount > 0)
+- `category`: TEXT, NOT NULL (dynamic categories)
+- `description`: TEXT (optional)
+- `payment_date`: TEXT, NOT NULL (YYYY-MM-DD format)
+- `payment_method`: TEXT, DEFAULT 'Bank Transfer'
+- `recipient`: TEXT, NOT NULL
+- `status`: TEXT, NOT NULL, DEFAULT 'Paid', CHECK (status IN ('Paid', 'Pending', 'Cancelled'))
+- `created_at`: TEXT, DEFAULT CURRENT_TIMESTAMP
+- `updated_at`: TEXT, DEFAULT CURRENT_TIMESTAMP
+
+#### trainer_rates table
+- `id`: INTEGER, PRIMARY KEY, AUTOINCREMENT
+- `trainer_id`: INTEGER, NOT NULL, Foreign Key to `members.id`
+- `payment_type`: TEXT, NOT NULL, CHECK (payment_type IN ('fixed', 'session'))
+- `monthly_salary`: REAL (for fixed type)
+- `per_session_rate`: REAL (for session type)
+- `status`: TEXT, NOT NULL, DEFAULT 'Active', CHECK (status IN ('Active', 'Inactive', 'Deleted'))
+- `created_at`: TEXT, DEFAULT CURRENT_TIMESTAMP
+- `updated_at`: TEXT, DEFAULT CURRENT_TIMESTAMP
+
+#### trainer_sessions table
+- `id`: INTEGER, PRIMARY KEY, AUTOINCREMENT
+- `trainer_id`: INTEGER, NOT NULL, Foreign Key to `members.id`
+- `session_date`: TEXT, NOT NULL (YYYY-MM-DD format)
+- `session_count`: INTEGER, NOT NULL, CHECK (session_count > 0)
+- `amount_per_session`: REAL, NOT NULL, CHECK (amount_per_session > 0)
+- `total_amount`: REAL, NOT NULL (calculated: session_count * amount_per_session)
+- `status`: TEXT, NOT NULL, DEFAULT 'Completed', CHECK (status IN ('Completed', 'Pending', 'Cancelled'))
+- `created_at`: TEXT, DEFAULT CURRENT_TIMESTAMP
+- `updated_at`: TEXT, DEFAULT CURRENT_TIMESTAMP
+
+### Context7-Grounded Payment Database Methods ✅
+
+#### Expense Management (Context7-Compliant)
+```javascript
+// Context7-grounded: All methods use synchronous better-sqlite3
+getExpenses(filters = {}) {
+    this.connect();
+    let query = `SELECT * FROM expenses WHERE status != 'Cancelled'`;
+    const params = [];
+    
+    if (filters.category) {
+        query += ` AND category = ?`;
+        params.push(filters.category);
+    }
+    if (filters.startDate && filters.endDate) {
+        query += ` AND payment_date BETWEEN ? AND ?`;
+        params.push(filters.startDate, filters.endDate);
+    }
+    
+    query += ` ORDER BY payment_date DESC, created_at DESC`;
+    const stmt = this.prepare(query);
+    return stmt.all(...params);
+}
+
+createExpense(expense) {
+    this.connect();
+    const { amount, category, description, payment_date, payment_method, recipient } = expense;
+    
+    const stmt = this.prepare(`
+        INSERT INTO expenses (amount, category, description, payment_date, payment_method, recipient) 
+        VALUES (?, ?, ?, ?, ?, ?)
+    `);
+    
+    const result = stmt.run(amount, category, description || null, payment_date, payment_method || 'Bank Transfer', recipient);
+    return { id: result.lastInsertRowid, ...expense };
+}
+
+updateExpense(id, expense) {
+    this.connect();
+    const { amount, category, description, payment_date, payment_method, recipient, status } = expense;
+    
+    const stmt = this.prepare(`
+        UPDATE expenses 
+        SET amount = ?, category = ?, description = ?, payment_date = ?, payment_method = ?, recipient = ?, status = ?, updated_at = CURRENT_TIMESTAMP 
+        WHERE id = ?
+    `);
+    
+    const result = stmt.run(amount, category, description, payment_date, payment_method, recipient, status || 'Paid', id);
+    return { changes: result.changes };
+}
+
+deleteExpense(id) {
+    this.connect();
+    // Context7-grounded: Soft delete pattern
+    const stmt = this.prepare('UPDATE expenses SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+    const result = stmt.run('Cancelled', id);
+    return { changes: result.changes };
+}
+
+getExpenseCategories() {
+    this.connect();
+    const stmt = this.prepare(`SELECT DISTINCT category FROM expenses WHERE status != 'Cancelled' ORDER BY category`);
+    return stmt.all().map(row => row.category);
+}
+```
+
+#### Trainer Payment Management (Context7-Compliant)
+```javascript
+getTrainerRates(trainerId = null) {
+    this.connect();
+    let query = `
+        SELECT tr.*, m.name as trainer_name, m.phone as trainer_phone
+        FROM trainer_rates tr
+        JOIN members m ON tr.trainer_id = m.id
+        WHERE tr.status != 'Deleted'
+    `;
+    const params = [];
+    
+    if (trainerId) {
+        query += ` AND tr.trainer_id = ?`;
+        params.push(trainerId);
+    }
+    
+    query += ` ORDER BY tr.created_at DESC`;
+    const stmt = this.prepare(query);
+    return stmt.all(...params);
+}
+
+createTrainerRate(rate) {
+    this.connect();
+    const { trainer_id, payment_type, monthly_salary, per_session_rate, status = 'Active' } = rate;
+    
+    // Context7-grounded: Deactivate existing rates before creating new one
+    const deactivateStmt = this.prepare(`
+        UPDATE trainer_rates 
+        SET status = 'Inactive', updated_at = CURRENT_TIMESTAMP 
+        WHERE trainer_id = ? AND status = 'Active'
+    `);
+    deactivateStmt.run(trainer_id);
+    
+    const createStmt = this.prepare(`
+        INSERT INTO trainer_rates (trainer_id, payment_type, monthly_salary, per_session_rate, status) 
+        VALUES (?, ?, ?, ?, ?)
+    `);
+    
+    const result = createStmt.run(trainer_id, payment_type, monthly_salary, per_session_rate, status);
+    return { id: result.lastInsertRowid, ...rate };
+}
+```
+
+#### Financial Reporting Integration (Context7-Compliant)
+```javascript
+getPaymentSummary(startDate = null, endDate = null) {
+    this.connect();
+    let query = `SELECT * FROM expenses WHERE status = 'Paid'`;
+    const params = [];
+    
+    if (startDate && endDate) {
+        query += ` AND payment_date BETWEEN ? AND ?`;
+        params.push(startDate, endDate);
+    }
+    
+    const stmt = this.prepare(query);
+    const expenses = stmt.all(...params);
+    
+    // Calculate summary metrics
+    const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const categoryBreakdown = expenses.reduce((acc, expense) => {
+        if (!acc[expense.category]) {
+            acc[expense.category] = { total_amount: 0, count: 0 };
+        }
+        acc[expense.category].total_amount += expense.amount;
+        acc[expense.category].count += 1;
+        return acc;
+    }, {});
+    
+    return {
+        totalExpenses,
+        expenseCount: expenses.length,
+        categoryBreakdown: Object.entries(categoryBreakdown).map(([category, data]) => ({
+            category,
+            total_amount: data.total_amount,
+            count: data.count
+        }))
+    };
+}
+
+getFinancialReportWithExpenses(startDate, endDate) {
+    this.connect();
+    
+    // Get income data (existing method)
+    const incomeData = this.getFinancialReport(startDate, endDate);
+    
+    // Get expense data
+    const paymentSummary = this.getPaymentSummary(startDate, endDate);
+    
+    // Calculate enhanced metrics
+    const totalIncome = incomeData.total_revenue || 0;
+    const totalExpenses = paymentSummary.totalExpenses || 0;
+    const netProfit = totalIncome - totalExpenses;
+    const profitMargin = totalIncome > 0 ? ((netProfit / totalIncome) * 100).toFixed(2) : 0;
+    
+    return {
+        ...incomeData,
+        income: incomeData.transactions ? 
+            incomeData.transactions.reduce((acc, t) => {
+                const type = t.type === 'group_class' ? 'Group Class' : 'Personal Training';
+                if (!acc.find(item => item.type === type)) {
+                    acc.push({ type, total_amount: 0, count: 0 });
+                }
+                const item = acc.find(item => item.type === type);
+                item.total_amount += t.amount;
+                item.count += 1;
+                return acc;
+            }, []) : [],
+        expenses: {
+            data: paymentSummary.categoryBreakdown,
+            total: totalExpenses
+        },
+        summary: {
+            totalIncome,
+            totalExpenses,
+            netProfit,
+            profitMargin: parseFloat(profitMargin)
+        }
+    };
+}
+```
+
+### Payment System Business Rules
+
+#### Expense Management Logic
+- **Dynamic Categories**: Categories auto-populate from existing expense entries
+- **Soft Delete Pattern**: Expenses marked as 'Cancelled' instead of hard delete
+- **Payment Methods**: Bank Transfer as default, customizable per expense
+- **Date Format**: Store as YYYY-MM-DD, display as DD/MM/YYYY for consistency
+
+#### Trainer Payment Configuration
+- **Payment Types**: Fixed monthly salary OR per-session rate (mutually exclusive)
+- **Rate Management**: Only one active rate per trainer at any time
+- **Status Transitions**: Active → Inactive when new rate created, Inactive → Deleted for removal
+- **Session Calculation**: total_amount = session_count * amount_per_session (auto-calculated)
+
+#### Financial Integration
+- **P&L Enhancement**: Original financial reports enhanced with expense data
+- **Profit Calculation**: Net Profit = Total Income - Total Expenses
+- **Margin Analysis**: Profit Margin = (Net Profit / Total Income) * 100
+- **Category Analytics**: Expense breakdown by category with count and total amounts
+
+### Performance Optimizations ✅
+
+#### Database Indexes (Payment System)
+```sql
+-- Expense performance indexes
+CREATE INDEX idx_expenses_category ON expenses(category);
+CREATE INDEX idx_expenses_payment_date ON expenses(payment_date);
+CREATE INDEX idx_expenses_status ON expenses(status);
+CREATE INDEX idx_expenses_recipient ON expenses(recipient);
+
+-- Trainer rate indexes
+CREATE INDEX idx_trainer_rates_trainer_id ON trainer_rates(trainer_id);
+CREATE INDEX idx_trainer_rates_status ON trainer_rates(status);
+CREATE INDEX idx_trainer_rates_payment_type ON trainer_rates(payment_type);
+
+-- Trainer session indexes
+CREATE INDEX idx_trainer_sessions_trainer_id ON trainer_sessions(trainer_id);
+CREATE INDEX idx_trainer_sessions_date ON trainer_sessions(session_date);
+CREATE INDEX idx_trainer_sessions_status ON trainer_sessions(status);
+```
+
+#### Query Performance Patterns
+- **Prepared Statement Caching**: All payment queries use cached prepared statements
+- **Parameterized Filtering**: Dynamic WHERE clauses with parameter binding
+- **JOIN Optimization**: Trainer rate queries join with members table using indexed foreign keys
+- **Date Range Queries**: BETWEEN operators for efficient date filtering
+- **Status Filtering**: Indexed status columns for fast soft-delete filtering
+

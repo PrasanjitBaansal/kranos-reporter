@@ -108,6 +108,7 @@
 		{ path: '/plans', label: 'Plans', icon: '💪', permissions: ['plans.view'] },
 		{ path: '/memberships', label: 'Memberships', icon: '🎯', permissions: ['memberships.view'] },
 		{ path: '/reporting', label: 'Reports', icon: '📈', permissions: ['reports.view'] },
+		{ path: '/payments', label: 'Payments', icon: '💸', permissions: ['payments.view'] },
 		{ path: '/users', label: 'Users', icon: '👤', permissions: ['users.view'] }
 	];
 	
