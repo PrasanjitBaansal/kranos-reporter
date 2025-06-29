@@ -4,7 +4,7 @@ import { verifyAccessToken, generateAccessToken } from '$lib/security/jwt-utils.
 
 // Route permission definitions based on role hierarchy
 const ROUTE_PERMISSIONS = {
-	// Admin and Trainer can access members
+	// Admin and Trainer can access members (updated below for create/edit/delete restrictions)
 	'/members': ['members.view'],
 	'/api/members': ['members.view'],
 	
@@ -22,8 +22,11 @@ const ROUTE_PERMISSIONS = {
 	// Settings require admin permissions
 	'/settings': ['settings.view'],
 	
-	// User management (future implementation) - Admin only
-	'/users': ['users.view']
+	// User management - Admin only
+	'/users': ['users.view'],
+	
+	// Member profile - Members only (members can view their own profile)
+	'/profile': ['profile.view']
 };
 
 // Check if user has required permissions for a route

@@ -7,6 +7,13 @@
 	
 	export let data;
 	
+	// Context7-grounded: Role-based dashboard content
+	$: user = data.user;
+	$: userRole = user?.role || 'guest';
+	$: isAdmin = userRole === 'admin';
+	$: isTrainer = userRole === 'trainer'; 
+	$: isMember = userRole === 'member';
+	
 	let stats = {
 		totalMembers: 0,
 		activeMembers: 0,
@@ -154,7 +161,18 @@
 			<span class="title-icon">📊</span>
 			Dashboard
 		</h1>
-		<p class="dashboard-subtitle animate-slide-up">Welcome back! Here's what's happening at your gym.</p>
+		<!-- Context7-grounded: Role-specific welcome messages -->
+		<p class="dashboard-subtitle animate-slide-up">
+			{#if isMember}
+				Welcome back, {user?.username}! Check your membership status and activity.
+			{:else if isTrainer}
+				Welcome back, {user?.username}! Here's your gym overview.
+			{:else if isAdmin}
+				Welcome back, {user?.username}! Here's what's happening at your gym.
+			{:else}
+				Welcome back! Here's what's happening at your gym.
+			{/if}
+		</p>
 	</div>
 	
 	{#if isLoading}
@@ -163,50 +181,109 @@
 			<p>Loading dashboard...</p>
 		</div>
 	{:else}
-		<div class="quick-actions card animate-slide-up">
-			<div class="card-header">
-				<h2>
-					<span class="section-icon">⚡</span>
-					Quick Actions
-				</h2>
+		<!-- Context7-grounded: Role-specific quick actions -->
+		{#if isMember}
+			<div class="quick-actions card animate-slide-up">
+				<div class="card-header">
+					<h2>
+						<span class="section-icon">⚡</span>
+						Quick Actions
+					</h2>
+				</div>
+				
+				<div class="actions-grid-full">
+					<a href="/profile" class="action-item">
+						<div class="action-icon">👤</div>
+						<div class="action-content">
+							<h4>My Profile</h4>
+							<p>View membership details</p>
+						</div>
+					</a>
+				</div>
 			</div>
-			
-			<div class="actions-grid-full">
-				<a href="/members" class="action-item">
-					<div class="action-icon">👥</div>
-					<div class="action-content">
-						<h4>Add Member</h4>
-						<p>Register new member</p>
-					</div>
-				</a>
+		{:else if isTrainer}
+			<div class="quick-actions card animate-slide-up">
+				<div class="card-header">
+					<h2>
+						<span class="section-icon">⚡</span>
+						Quick Actions
+					</h2>
+				</div>
 				
-				<a href="/memberships" class="action-item">
-					<div class="action-icon">🎯</div>
-					<div class="action-content">
-						<h4>New Membership</h4>
-						<p>Create membership</p>
-					</div>
-				</a>
-				
-				<a href="/plans" class="action-item">
-					<div class="action-icon">💪</div>
-					<div class="action-content">
-						<h4>Manage Plans</h4>
-						<p>Edit gym plans</p>
-					</div>
-				</a>
-				
-				<a href="/reporting" class="action-item">
-					<div class="action-icon">📈</div>
-					<div class="action-content">
-						<h4>View Reports</h4>
-						<p>Analytics & insights</p>
-					</div>
-				</a>
+				<div class="actions-grid-full">
+					<a href="/members" class="action-item">
+						<div class="action-icon">👥</div>
+						<div class="action-content">
+							<h4>View Members</h4>
+							<p>Browse member list</p>
+						</div>
+					</a>
+					
+					<a href="/memberships" class="action-item">
+						<div class="action-icon">🎯</div>
+						<div class="action-content">
+							<h4>New Membership</h4>
+							<p>Create membership</p>
+						</div>
+					</a>
+					
+					<a href="/plans" class="action-item">
+						<div class="action-icon">💪</div>
+						<div class="action-content">
+							<h4>Manage Plans</h4>
+							<p>Edit gym plans</p>
+						</div>
+					</a>
+				</div>
 			</div>
-		</div>
+		{:else if isAdmin}
+			<div class="quick-actions card animate-slide-up">
+				<div class="card-header">
+					<h2>
+						<span class="section-icon">⚡</span>
+						Quick Actions
+					</h2>
+				</div>
+				
+				<div class="actions-grid-full">
+					<a href="/members" class="action-item">
+						<div class="action-icon">👥</div>
+						<div class="action-content">
+							<h4>Add Member</h4>
+							<p>Register new member</p>
+						</div>
+					</a>
+					
+					<a href="/memberships" class="action-item">
+						<div class="action-icon">🎯</div>
+						<div class="action-content">
+							<h4>New Membership</h4>
+							<p>Create membership</p>
+						</div>
+					</a>
+					
+					<a href="/plans" class="action-item">
+						<div class="action-icon">💪</div>
+						<div class="action-content">
+							<h4>Manage Plans</h4>
+							<p>Edit gym plans</p>
+						</div>
+					</a>
+					
+					<a href="/reporting" class="action-item">
+						<div class="action-icon">📈</div>
+						<div class="action-content">
+							<h4>View Reports</h4>
+							<p>Analytics & insights</p>
+						</div>
+					</a>
+				</div>
+			</div>
+		{/if}
 		
-		<div class="stats-grid animate-slide-up">
+		<!-- Context7-grounded: Only show stats for admin and trainer roles -->
+		{#if isAdmin || isTrainer}
+			<div class="stats-grid animate-slide-up">
 			<div class="stat-card total-members">
 				<div class="stat-header">
 					<span class="stat-icon">👥</span>
@@ -267,8 +344,11 @@
 				</div>
 			</div>
 		</div>
+		{/if}
 		
-		<div class="recent-activity card animate-slide-up">
+		<!-- Context7-grounded: Recent activity for admin and trainer only -->
+		{#if isAdmin || isTrainer}
+			<div class="recent-activity card animate-slide-up">
 			<div class="card-header">
 				<h2>
 					<span class="section-icon">📋</span>
@@ -302,9 +382,11 @@
 				{/each}
 			</div>
 		</div>
+		{/if}
 		
-		<!-- Admin Access Button -->
-		<div class="admin-access animate-slide-up">
+		<!-- Admin Access Button - only show for admin users -->
+		{#if isAdmin}
+			<div class="admin-access animate-slide-up">
 			<button 
 				class="admin-button" 
 				on:click={handleAdminClick}
@@ -314,6 +396,7 @@
 				<span class="admin-text">Admin</span>
 			</button>
 		</div>
+		{/if}
 	{/if}
 </div>
 

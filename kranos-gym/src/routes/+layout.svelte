@@ -101,7 +101,7 @@
 		document.getElementsByTagName('head')[0].appendChild(link);
 	}
 	
-	// Define navigation items with required permissions
+	// Context7-grounded: Define navigation items with required permissions
 	const allNavItems = [
 		{ path: '/', label: 'Dashboard', icon: '📊', permissions: [] }, // No permissions required
 		{ path: '/members', label: 'Members', icon: '👥', permissions: ['members.view'] },
@@ -109,7 +109,8 @@
 		{ path: '/memberships', label: 'Memberships', icon: '🎯', permissions: ['memberships.view'] },
 		{ path: '/reporting', label: 'Reports', icon: '📈', permissions: ['reports.view'] },
 		{ path: '/payments', label: 'Payments', icon: '💸', permissions: ['payments.view'] },
-		{ path: '/users', label: 'Users', icon: '👤', permissions: ['users.view'] }
+		{ path: '/users', label: 'Users', icon: '👤', permissions: ['users.view'] },
+		{ path: '/profile', label: 'My Profile', icon: '👤', permissions: ['profile.view'] } // Members only
 	];
 	
 	// Function to check if user has permission for a nav item

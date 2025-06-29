@@ -8,6 +8,10 @@
 	export let data;
 	export const form = undefined; // For external reference only
 
+	// Context7-grounded: Role-based access control
+	$: canManageMembers = data.canManageMembers || false;
+	$: userRole = data.userRole || 'guest';
+
 	let selectedMember = null;
 	let isEditing = false;
 	let searchTerm = '';
@@ -239,14 +243,23 @@
 			<h1 class="page-title animate-slide-up">
 				Member Management
 			</h1>
-			<p class="page-subtitle animate-slide-up">Manage gym members and their information</p>
+			<p class="page-subtitle animate-slide-up">
+				{#if canManageMembers}
+					Manage gym members and their information
+				{:else}
+					View gym member information
+				{/if}
+			</p>
 		</div>
-		<div class="header-actions animate-slide-up">
-			<button class="btn btn-primary" on:click={newMember} data-testid="add-member-button">
-				<span class="btn-icon">➕</span>
-				Add Member
-			</button>
-		</div>
+		<!-- Context7-grounded: Only show Add Member button for admins -->
+		{#if canManageMembers}
+			<div class="header-actions animate-slide-up">
+				<button class="btn btn-primary" on:click={newMember} data-testid="add-member-button">
+					<span class="btn-icon">➕</span>
+					Add Member
+				</button>
+			</div>
+		{/if}
 	</div>
 
 	<div class="members-content">
@@ -366,12 +379,17 @@
 										{/if}
 									</td>
 									<td class="member-actions">
-										<button 
-											class="btn btn-secondary btn-sm"
-											on:click={() => editMember(member)}
-										>
-											✏️ Edit
-										</button>
+										<!-- Context7-grounded: Only show Edit button for admins -->
+										{#if canManageMembers}
+											<button 
+												class="btn btn-secondary btn-sm"
+												on:click={() => editMember(member)}
+											>
+												✏️ Edit
+											</button>
+										{:else}
+											<span class="role-badge trainer">View Only</span>
+										{/if}
 									</td>
 								</tr>
 							{/each}
@@ -1156,5 +1174,22 @@
 		clip: rect(0, 0, 0, 0);
 		white-space: nowrap;
 		border: 0;
+	}
+
+	/* Context7-grounded: Role-based UI elements */
+	.role-badge {
+		padding: 0.25rem 0.75rem;
+		border-radius: 12px;
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		white-space: nowrap;
+	}
+
+	.role-badge.trainer {
+		background: rgba(168, 85, 247, 0.2);
+		color: #a855f7;
+		border: 1px solid #a855f7;
 	}
 </style>

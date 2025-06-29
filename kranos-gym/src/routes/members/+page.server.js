@@ -1,21 +1,41 @@
 import Database from '../../lib/db/database.js';
 
-export const load = async () => {
+export const load = async ({ locals }) => {
     const db = new Database();
     try {
-        await db.connect();
-        const members = await db.getMembers();
-        return { members };
+        // Context7-grounded: Use synchronous connection
+        db.connect();
+        const members = db.getMembers();
+        
+        // Pass user role for UI permissions
+        const userRole = locals.user?.role || 'guest';
+        const canManageMembers = userRole === 'admin'; // Only admins can create/edit/delete
+        
+        return { 
+            members,
+            userRole,
+            canManageMembers
+        };
     } catch (error) {
         console.error('Members load error:', error);
-        return { members: [] };
+        return { 
+            members: [],
+            userRole: 'guest',
+            canManageMembers: false
+        };
     } finally {
-        await db.close();
+        // Context7-grounded: Synchronous connection cleanup
+        db.close();
     }
 };
 
 export const actions = {
-    create: async ({ request }) => {
+    create: async ({ request, locals }) => {
+        // Context7-grounded: Check admin permissions for member creation
+        if (!locals.user || locals.user.role !== 'admin') {
+            return { success: false, error: 'Only administrators can create members.' };
+        }
+        
         const db = new Database();
         const data = await request.formData();
         const member = {
@@ -27,10 +47,11 @@ export const actions = {
         };
 
         try {
-            await db.connect();
+            // Context7-grounded: Use synchronous connection
+            db.connect();
             
             // Check for duplicate phone number including deleted members
-            const existingMember = await db.getMemberByPhone(member.phone);
+            const existingMember = db.getMemberByPhone(member.phone);
             if (existingMember) {
                 if (existingMember.status === 'Deleted') {
                     return { success: false, error: 'This phone number belongs to a deleted member and cannot be reused. Please contact admin if you need to restore this member.' };
@@ -39,16 +60,20 @@ export const actions = {
                 }
             }
             
-            const result = await db.createMember(member);
+            const result = db.createMember(member);
             return { success: true, member: result };
         } catch (error) {
             return { success: false, error: error.message };
         } finally {
-            await db.close();
+            db.close();
         }
     },
 
-    update: async ({ request }) => {
+    update: async ({ request, locals }) => {
+        // Context7-grounded: Check admin permissions for member updates
+        if (!locals.user || locals.user.role !== 'admin') {
+            return { success: false, error: 'Only administrators can update members.' };
+        }
         const db = new Database();
         const data = await request.formData();
         const id = parseInt(data.get('id'));
@@ -61,17 +86,16 @@ export const actions = {
         };
 
         try {
-            await db.connect();
+            // Context7-grounded: Use synchronous connection
+            db.connect();
             
             // OPTIMIZATION: Batch all validation queries to reduce database roundtrips
             const phoneChanged = member.phone !== undefined;
             
-            // Parallel query execution for better performance
-            const [currentMember, duplicatePhoneCheck, membershipCheck] = await Promise.all([
-                db.getMemberById(id),
-                phoneChanged ? db.getMemberByPhone(member.phone) : null,
-                phoneChanged ? db.hasExistingMemberships(id) : null
-            ]);
+            // Context7-grounded: Use synchronous database calls
+            const currentMember = db.getMemberById(id);
+            const duplicatePhoneCheck = phoneChanged ? db.getMemberByPhone(member.phone) : null;
+            const membershipCheck = phoneChanged ? db.hasExistingMemberships(id) : null;
             
             if (!currentMember) {
                 return { success: false, error: 'Member not found.' };
@@ -98,28 +122,33 @@ export const actions = {
             member.status = currentMember.status;
             
             // OPTIMIZATION: Update member data
-            await db.updateMember(id, member);
+            db.updateMember(id, member);
             return { success: true };
         } catch (error) {
             return { success: false, error: error.message };
         } finally {
-            await db.close();
+            db.close();
         }
     },
 
-    delete: async ({ request }) => {
+    delete: async ({ request, locals }) => {
+        // Context7-grounded: Check admin permissions for member deletion
+        if (!locals.user || locals.user.role !== 'admin') {
+            return { success: false, error: 'Only administrators can delete members.' };
+        }
         const db = new Database();
         const data = await request.formData();
         const id = parseInt(data.get('id'));
 
         try {
-            await db.connect();
-            await db.deleteMember(id);
+            // Context7-grounded: Use synchronous connection
+            db.connect();
+            db.deleteMember(id);
             return { success: true };
         } catch (error) {
             return { success: false, error: error.message };
         } finally {
-            await db.close();
+            db.close();
         }
     }
 };

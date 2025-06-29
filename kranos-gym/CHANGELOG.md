@@ -5,6 +5,18 @@ All notable changes to the Kranos Gym Management System will be documented in th
 ## [Unreleased]
 
 ### Added
+- **Members Portal with Role-Based Access Control** (2025-06-29)
+  - Complete member profile page at `/profile` route showing membership history and details
+  - Context7-grounded implementation using better-sqlite3 synchronous patterns
+  - Personal information display with real-time membership status indicators
+  - Group class and PT membership history with progress tracking and renewal warnings
+  - Mobile-responsive design with touch-friendly interfaces and horizontal scrolling tables
+  - Role-specific navigation and dashboard content (Admin/Trainer/Member views)
+  - Added `profile.view` permission for members with proper database migration
+  - Updated trainer permissions to view-only access (removed create/edit member capabilities)
+  - Admin-only member management with both server-side and UI-level restrictions
+  - Enhanced permission system with granular access control for different user roles
+
 - **First-Time Admin Creation Wizard** (2025-06-29)
   - Complete setup wizard for fresh installations at `/setup` route
   - Professional wizard UI with step-by-step admin account creation
