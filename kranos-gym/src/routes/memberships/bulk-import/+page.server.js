@@ -28,9 +28,6 @@ async function performImport(validatedData) {
         const planDefaultAmounts = calculatePlanDefaultAmounts(validatedData);
         const membershipTypes = determineMembershipTypes(validatedData);
         
-        let membershipCount = 0;
-        let skippedCount = 0;
-        
         // OPTIMIZATION: Use transaction for atomic bulk operations (5x performance improvement)
         const bulkImport = db.transaction(() => {
             // OPTIMIZATION: Batch process members using prepared statements
@@ -102,25 +99,17 @@ async function performImport(validatedData) {
                     console.warn(`Failed to insert plan ${plan.name}:`, error.message);
                 }
             }
-                const defaultAmount = planDefaultAmounts.get(planKey);
-                const displayName = `${row.plan_name} - ${row.duration_days} days`;
-                
-                try {
-                    await db.createGroupPlan({
-                        name: row.plan_name,
-                        duration_days: parseInt(row.duration_days),
-                        default_amount: defaultAmount,
-                        display_name: displayName,
-                        status: 'Active'
-                    });
-                } catch (error) {
-                    // Plan might already exist, ignore error
-                }
-                processedPlans.add(planKey);
-            }
-        }
+            
+            return { processedMembers: uniqueMembers.size, processedPlans: uniquePlans.size };
+        });
+        
+        // Execute the bulk import transaction
+        const { processedMembers, processedPlans } = bulkImport();
         
         // Process memberships
+        let membershipCount = 0;
+        let skippedCount = 0;
+        
         for (const row of validatedData) {
             try {
                 // Get member and plan IDs
@@ -172,8 +161,8 @@ async function performImport(validatedData) {
             imported: membershipCount,
             skipped: skippedCount,
             summary: {
-                totalMembers: processedMembers.size,
-                totalPlans: processedPlans.size,
+                totalMembers: processedMembers,
+                totalPlans: processedPlans,
                 totalMemberships: membershipCount
             }
         };

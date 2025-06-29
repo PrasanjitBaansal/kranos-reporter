@@ -222,6 +222,9 @@ export function sanitizeDate(dateStr) {
     
     let sanitized = dateStr.trim();
     
+    // Decode HTML entities for forward slashes if they exist
+    sanitized = sanitized.replace(/&#x2F;/g, '/');
+    
     // Accept DD-MM-YYYY or DD/MM/YYYY format
     const datePattern = /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/;
     const match = sanitized.match(datePattern);
@@ -354,8 +357,26 @@ export function sanitizeCsvCell(cellValue) {
         sanitized = "'" + sanitized; // Prefix with quote to prevent formula execution
     }
     
-    // Sanitize HTML entities
-    sanitized = sanitizeHtml(sanitized);
+    // For date fields (DD/MM/YYYY or DD-MM-YYYY), don't encode forward slashes
+    const datePattern = /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}$/;
+    if (datePattern.test(sanitized)) {
+        // Only apply basic sanitization for potential XSS without encoding date separators
+        sanitized = sanitized.replace(/[&<>"'`=]/g, (char) => {
+            const entities = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#x27;',
+                '`': '&#96;',
+                '=': '&#x3D;'
+            };
+            return entities[char] || char;
+        });
+    } else {
+        // Sanitize HTML entities for non-date fields
+        sanitized = sanitizeHtml(sanitized);
+    }
     
     return sanitized;
 }
