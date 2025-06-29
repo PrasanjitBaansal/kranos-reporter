@@ -4,7 +4,7 @@ function getDatabase() {
     return new Database('kranos.db');
 }
 
-export async function load() {
+export async function load({ locals }) {
     const db = getDatabase();
     
     try {
@@ -18,7 +18,9 @@ export async function load() {
         db.close();
         
         return {
-            appSettings: settingsObj
+            appSettings: settingsObj,
+            user: locals.user, // Pass authenticated user data to layout
+            permissions: locals.permissions || [] // Pass user permissions for navigation filtering
         };
     } catch (error) {
         console.error('Error loading app settings:', error);
@@ -32,7 +34,9 @@ export async function load() {
                 favicon_path: '/favicon.png',
                 logo_type: 'emoji',
                 logo_value: '🏋️'
-            }
+            },
+            user: locals.user,
+            permissions: locals.permissions || []
         };
     }
 }

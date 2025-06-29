@@ -420,6 +420,215 @@ class KranosSQLite {
         return updateAll();
     }
 
+    // Context7-grounded: Authentication Methods
+    getUserById(id) {
+        this.connect();
+        const stmt = this.prepare('SELECT * FROM users WHERE id = ? AND is_active = 1');
+        return stmt.get(id);
+    }
+
+    getUserByUsername(username) {
+        this.connect();
+        const stmt = this.prepare('SELECT * FROM users WHERE username = ? AND is_active = 1');
+        return stmt.get(username);
+    }
+
+    getUserByEmail(email) {
+        this.connect();
+        const stmt = this.prepare('SELECT * FROM users WHERE email = ? AND is_active = 1');
+        return stmt.get(email);
+    }
+
+    createUser(userData) {
+        this.connect();
+        const { username, email, password_hash, salt, role = 'member', full_name, member_id = null } = userData;
+        const stmt = this.prepare(`
+            INSERT INTO users (username, email, password_hash, salt, role, full_name, member_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `);
+        const result = stmt.run(username, email, password_hash, salt, role, full_name, member_id);
+        return { id: result.lastInsertRowid, ...userData };
+    }
+
+    updateUser(id, userData) {
+        this.connect();
+        const fields = Object.keys(userData).filter(key => key !== 'id');
+        const values = fields.map(field => userData[field]);
+        const setClause = fields.map(field => `${field} = ?`).join(', ');
+        
+        const stmt = this.prepare(`UPDATE users SET ${setClause}, updated_at = ? WHERE id = ?`);
+        values.push(new Date().toISOString(), id);
+        const result = stmt.run(...values);
+        return { changes: result.changes };
+    }
+
+    // Session Management
+    createSession(sessionData) {
+        this.connect();
+        const { user_id, session_token, refresh_token, device_info, ip_address, user_agent, expires_at } = sessionData;
+        const stmt = this.prepare(`
+            INSERT INTO user_sessions (user_id, session_token, refresh_token, device_info, ip_address, user_agent, expires_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `);
+        const result = stmt.run(user_id, session_token, refresh_token, device_info, ip_address, user_agent, expires_at);
+        return { id: result.lastInsertRowid, ...sessionData };
+    }
+
+    getSessionByToken(token) {
+        this.connect();
+        const stmt = this.prepare(`
+            SELECT s.*, u.username, u.email, u.role, u.is_active as user_active
+            FROM user_sessions s
+            JOIN users u ON s.user_id = u.id
+            WHERE s.session_token = ? AND s.is_active = 1 AND s.expires_at > ?
+        `);
+        return stmt.get(token, new Date().toISOString());
+    }
+
+    updateSession(id, data) {
+        this.connect();
+        const fields = Object.keys(data);
+        const values = fields.map(field => data[field]);
+        const setClause = fields.map(field => `${field} = ?`).join(', ');
+        
+        const stmt = this.prepare(`UPDATE user_sessions SET ${setClause} WHERE id = ?`);
+        values.push(id);
+        const result = stmt.run(...values);
+        return { changes: result.changes };
+    }
+
+    deactivateSession(token) {
+        this.connect();
+        const stmt = this.prepare('UPDATE user_sessions SET is_active = 0 WHERE session_token = ?');
+        const result = stmt.run(token);
+        return { changes: result.changes };
+    }
+
+    cleanupExpiredSessions() {
+        this.connect();
+        const stmt = this.prepare('DELETE FROM user_sessions WHERE expires_at < ? OR is_active = 0');
+        const result = stmt.run(new Date().toISOString());
+        return { deleted: result.changes };
+    }
+
+    // Permission Management
+    getUserPermissions(userId) {
+        this.connect();
+        const stmt = this.prepare(`
+            SELECT p.name, p.description, p.category
+            FROM users u
+            JOIN role_permissions rp ON u.role = rp.role
+            JOIN permissions p ON rp.permission_id = p.id
+            WHERE u.id = ?
+            ORDER BY p.category, p.name
+        `);
+        return stmt.all(userId);
+    }
+
+    hasPermission(userId, permissionName) {
+        this.connect();
+        const stmt = this.prepare(`
+            SELECT COUNT(*) as count
+            FROM users u
+            JOIN role_permissions rp ON u.role = rp.role
+            JOIN permissions p ON rp.permission_id = p.id
+            WHERE u.id = ? AND p.name = ?
+        `);
+        const result = stmt.get(userId, permissionName);
+        return result.count > 0;
+    }
+
+    // Admin Detection Methods for First-Time Setup
+    countUsersByRole(role) {
+        this.connect();
+        const stmt = this.prepare('SELECT COUNT(*) as count FROM users WHERE role = ? AND is_active = 1');
+        const result = stmt.get(role);
+        return result.count;
+    }
+
+    hasAdminUser() {
+        return this.countUsersByRole('admin') > 0;
+    }
+
+    isFirstTimeSetup() {
+        this.connect();
+        const stmt = this.prepare('SELECT COUNT(*) as count FROM users WHERE is_active = 1');
+        const result = stmt.get();
+        return result.count === 0;
+    }
+
+    getAllUsers(options = {}) {
+        this.connect();
+        const { includeInactive = false, role = null } = options;
+        
+        let query = `
+            SELECT id, username, email, role, is_active, email_verified, 
+                   failed_login_attempts, last_login_at, created_at, updated_at
+            FROM users
+            WHERE 1=1
+        `;
+        
+        const params = [];
+        
+        if (!includeInactive) {
+            query += ` AND is_active = ?`;
+            params.push(1);
+        }
+        
+        if (role) {
+            query += ` AND role = ?`;
+            params.push(role);
+        }
+        
+        query += ` ORDER BY created_at DESC`;
+        
+        const stmt = this.prepare(query);
+        return stmt.all(...params);
+    }
+
+    // Activity Logging
+    logActivity(activityData) {
+        this.connect();
+        const {
+            user_id, username, action, resource_type, resource_id,
+            ip_address, user_agent, details = null
+        } = activityData;
+
+        const stmt = this.prepare(`
+            INSERT INTO user_activity_log (
+                user_id, username, action, resource_type, resource_id,
+                ip_address, user_agent, details
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        const result = stmt.run(
+            user_id, username, action, resource_type, resource_id,
+            ip_address, user_agent, details ? JSON.stringify(details) : null
+        );
+        return { id: result.lastInsertRowid };
+    }
+
+    logSecurityEvent(eventData) {
+        this.connect();
+        const {
+            user_id, username, event_type, severity = 'info',
+            ip_address, user_agent, details = null
+        } = eventData;
+
+        const stmt = this.prepare(`
+            INSERT INTO security_events (
+                user_id, username, event_type, severity,
+                ip_address, user_agent, details
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        const result = stmt.run(
+            user_id, username, event_type, severity,
+            ip_address, user_agent, details ? JSON.stringify(details) : null
+        );
+        return { id: result.lastInsertRowid };
+    }
+
     // Reporting Functions
     getFinancialReport(startDate, endDate) {
         this.connect();

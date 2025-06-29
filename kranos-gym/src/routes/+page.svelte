@@ -1,6 +1,8 @@
 <script>
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
+	import { showError } from '$lib/stores/toast.js';
 	import PasswordModal from '$lib/components/PasswordModal.svelte';
 	
 	export let data;
@@ -17,6 +19,14 @@
 	let showPasswordModal = false;
 	
 	onMount(async () => {
+		// Check for unauthorized error from URL params
+		const urlParams = new URLSearchParams($page.url.search);
+		if (urlParams.get('error') === 'unauthorized') {
+			showError('Access denied. You do not have permission to access that page.');
+			// Clean up URL
+			window.history.replaceState({}, document.title, $page.url.pathname);
+		}
+		
 		await loadDashboardData();
 		isLoading = false;
 	});
