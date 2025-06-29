@@ -295,3 +295,10 @@ try {
 - **CONNECTION FIRST**: Establish Context7 MCP connection before starting any routes/API development work
 - **DOCKER TROUBLESHOOTING**: Use standard protocol: check `docker ps | grep context7` → start if needed → configure MCP client
 - **NO EXCEPTIONS**: This applies to ALL routes and API coding tasks in this module
+
+## Docker Toolkit MCP Requirements ⚠️ CRITICAL  
+- **MANDATORY TOOL**: USE DOCKER TOOLKIT TO CONNECT TO MCP SERVERS
+- **NO DIRECT DOCKER**: Never use regular docker commands for MCP - always use Docker Toolkit
+- **MCP SERVER MANAGEMENT**: All MCP server connections must go through Docker Toolkit interface
+- **CONFIGURATION**: Docker Toolkit provides proper MCP server configuration and management
+
