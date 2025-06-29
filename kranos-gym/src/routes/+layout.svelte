@@ -6,7 +6,17 @@
 	export let data;
 	
 	let isMenuOpen = false;
+	let isUserMenuOpen = false;
+	let showChangePasswordModal = false;
+	let passwordForm = {
+		currentPassword: '',
+		newPassword: '',
+		confirmPassword: ''
+	};
+	let isChangingPassword = false;
 	$: appSettings = data.appSettings || {};
+	$: user = data.user;
+	$: permissions = data.permissions || [];
 	
 	onMount(async () => {
 		// Add smooth scrolling behavior
@@ -91,18 +101,116 @@
 		document.getElementsByTagName('head')[0].appendChild(link);
 	}
 	
-	const navItems = [
-		{ path: '/', label: 'Dashboard', icon: '📊' },
-		{ path: '/members', label: 'Members', icon: '👥' },
-		{ path: '/plans', label: 'Plans', icon: '💪' },
-		{ path: '/memberships', label: 'Memberships', icon: '🎯' },
-		{ path: '/reporting', label: 'Reports', icon: '📈' }
+	// Define navigation items with required permissions
+	const allNavItems = [
+		{ path: '/', label: 'Dashboard', icon: '📊', permissions: [] }, // No permissions required
+		{ path: '/members', label: 'Members', icon: '👥', permissions: ['members.view'] },
+		{ path: '/plans', label: 'Plans', icon: '💪', permissions: ['plans.view'] },
+		{ path: '/memberships', label: 'Memberships', icon: '🎯', permissions: ['memberships.view'] },
+		{ path: '/reporting', label: 'Reports', icon: '📈', permissions: ['reports.view'] },
+		{ path: '/users', label: 'Users', icon: '👤', permissions: ['users.view'] }
 	];
+	
+	// Function to check if user has permission for a nav item
+	function hasPermission(requiredPerms) {
+		if (requiredPerms.length === 0) return true; // No permissions required
+		return requiredPerms.some(perm => permissions.includes(perm));
+	}
+	
+	// Filter navigation items based on user permissions
+	$: navItems = allNavItems.filter(item => hasPermission(item.permissions));
 	
 	function toggleMenu() {
 		isMenuOpen = !isMenuOpen;
 	}
+	
+	function toggleUserMenu() {
+		isUserMenuOpen = !isUserMenuOpen;
+	}
+	
+	function closeMenus() {
+		isMenuOpen = false;
+		isUserMenuOpen = false;
+	}
+	
+	// Close menus when clicking outside
+	function handleOutsideClick(event) {
+		if (!event.target.closest('.user-menu-container') && !event.target.closest('.nav-menu')) {
+			closeMenus();
+		}
+	}
+	
+	function openChangePasswordModal() {
+		showChangePasswordModal = true;
+		closeMenus();
+		passwordForm = {
+			currentPassword: '',
+			newPassword: '',
+			confirmPassword: ''
+		};
+	}
+	
+	function closeChangePasswordModal() {
+		showChangePasswordModal = false;
+		isChangingPassword = false;
+		passwordForm = {
+			currentPassword: '',
+			newPassword: '',
+			confirmPassword: ''
+		};
+	}
+	
+	async function handleChangePassword() {
+		// Validation
+		if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+			alert('Please fill in all password fields');
+			return;
+		}
+		
+		if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+			alert('New passwords do not match');
+			return;
+		}
+		
+		if (passwordForm.newPassword.length < 8) {
+			alert('New password must be at least 8 characters');
+			return;
+		}
+		
+		isChangingPassword = true;
+		
+		try {
+			const response = await fetch('/api/auth/change-password', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					currentPassword: passwordForm.currentPassword,
+					newPassword: passwordForm.newPassword
+				})
+			});
+			
+			const result = await response.json();
+			
+			if (result.success) {
+				alert('Password changed successfully! You will be redirected to login.');
+				closeChangePasswordModal();
+				// Redirect to login after password change
+				window.location.href = '/logout';
+			} else {
+				alert('Error: ' + (result.error || 'Failed to change password'));
+			}
+		} catch (error) {
+			console.error('Password change error:', error);
+			alert('An error occurred while changing password');
+		} finally {
+			isChangingPassword = false;
+		}
+	}
 </script>
+
+<svelte:window on:click={handleOutsideClick} />
 
 <div class="app">
 	<nav class="navbar">
@@ -137,6 +245,37 @@
 					</a>
 				{/each}
 			</div>
+			
+			<!-- User Menu -->
+			{#if user}
+				<div class="user-menu-container">
+					<button class="user-menu-trigger" on:click={toggleUserMenu} aria-label="User menu">
+						<span class="user-avatar">👤</span>
+						<span class="user-name">{user.username}</span>
+						<span class="menu-arrow" class:rotated={isUserMenuOpen}>▼</span>
+					</button>
+					
+					{#if isUserMenuOpen}
+						<div class="user-menu">
+							<div class="user-info">
+								<div class="user-details">
+									<span class="username">{user.username}</span>
+									<span class="user-role">{user.role}</span>
+								</div>
+							</div>
+							<div class="menu-divider"></div>
+							<button class="menu-item" on:click={openChangePasswordModal}>
+								<span class="menu-icon">🔑</span>
+								Change Password
+							</button>
+							<a href="/logout" class="menu-item logout-item">
+								<span class="menu-icon">🚪</span>
+								Sign Out
+							</a>
+						</div>
+					{/if}
+				</div>
+			{/if}
 		</div>
 	</nav>
 	
@@ -146,6 +285,79 @@
 	
 	<Toast />
 </div>
+
+<!-- Change Password Modal -->
+{#if showChangePasswordModal}
+	<div class="modal-overlay" on:click={closeChangePasswordModal}>
+		<div class="modal" on:click|stopPropagation>
+			<div class="modal-header">
+				<h3>Change Password</h3>
+				<button class="modal-close" on:click={closeChangePasswordModal}>×</button>
+			</div>
+			
+			<div class="modal-body">
+				<div class="form-group">
+					<label for="current-password">Current Password</label>
+					<input
+						id="current-password"
+						type="password"
+						class="form-control"
+						placeholder="Enter your current password"
+						bind:value={passwordForm.currentPassword}
+						disabled={isChangingPassword}
+					/>
+				</div>
+				
+				<div class="form-group">
+					<label for="new-password">New Password</label>
+					<input
+						id="new-password"
+						type="password"
+						class="form-control"
+						placeholder="Enter new password (min 8 characters)"
+						bind:value={passwordForm.newPassword}
+						disabled={isChangingPassword}
+					/>
+				</div>
+				
+				<div class="form-group">
+					<label for="confirm-new-password">Confirm New Password</label>
+					<input
+						id="confirm-new-password"
+						type="password"
+						class="form-control"
+						placeholder="Confirm your new password"
+						bind:value={passwordForm.confirmPassword}
+						disabled={isChangingPassword}
+					/>
+				</div>
+				
+				<div class="alert alert-info">
+					<strong>Note:</strong> Changing your password will log you out and require you to sign in again with your new password.
+				</div>
+			</div>
+			
+			<div class="modal-footer">
+				<button 
+					type="button" 
+					class="btn btn-secondary" 
+					on:click={closeChangePasswordModal}
+					disabled={isChangingPassword}
+				>
+					Cancel
+				</button>
+				<button 
+					type="button" 
+					class="btn btn-primary" 
+					on:click={handleChangePassword}
+					disabled={isChangingPassword}
+				>
+					{#if isChangingPassword}Changing...{:else}Change Password{/if}
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
 
 <style>
 	:global(:root) {
@@ -538,5 +750,279 @@
 	
 	:global(.animate-pulse) {
 		animation: pulse 2s ease-in-out infinite;
+	}
+
+	/* User Menu Styles */
+	.user-menu-container {
+		position: relative;
+	}
+
+	.user-menu-trigger {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.75rem 1rem;
+		background: var(--gradient-dark);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		color: var(--text);
+		cursor: pointer;
+		transition: var(--transition-fast);
+		font-size: 0.9rem;
+		font-weight: 500;
+	}
+
+	.user-menu-trigger:hover {
+		border-color: var(--primary);
+		box-shadow: 0 0 15px rgba(243, 148, 7, 0.2);
+		background: var(--surface-light);
+	}
+
+	.user-avatar {
+		font-size: 1.2rem;
+		filter: drop-shadow(0 0 5px var(--primary));
+	}
+
+	.user-name {
+		max-width: 120px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.menu-arrow {
+		font-size: 0.7rem;
+		transition: transform var(--transition-fast);
+		opacity: 0.7;
+	}
+
+	.menu-arrow.rotated {
+		transform: rotate(180deg);
+	}
+
+	.user-menu {
+		position: absolute;
+		top: 100%;
+		right: 0;
+		margin-top: 0.5rem;
+		background: var(--gradient-dark);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		min-width: 200px;
+		box-shadow: var(--shadow-soft);
+		z-index: 1000;
+		backdrop-filter: blur(20px);
+		animation: slideInDown 0.2s ease-out;
+	}
+
+	.user-info {
+		padding: 1rem;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.user-details .username {
+		display: block;
+		font-weight: 600;
+		color: var(--text);
+		font-size: 0.95rem;
+	}
+
+	.user-details .user-role {
+		display: block;
+		font-size: 0.8rem;
+		color: var(--text-muted);
+		text-transform: capitalize;
+		margin-top: 0.25rem;
+	}
+
+	.menu-divider {
+		height: 1px;
+		background: var(--border);
+		margin: 0;
+	}
+
+	.menu-item {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.75rem 1rem;
+		color: var(--text-muted);
+		text-decoration: none;
+		transition: var(--transition-fast);
+		font-size: 0.9rem;
+		font-weight: 500;
+		background: none;
+		border: none;
+		width: 100%;
+		text-align: left;
+		cursor: pointer;
+	}
+
+	.menu-item:hover {
+		background: var(--surface-light);
+		color: var(--text);
+	}
+
+	.logout-item:hover {
+		background: rgba(239, 68, 68, 0.1);
+		color: #ef4444;
+	}
+
+	.menu-icon {
+		font-size: 1rem;
+		width: 20px;
+		text-align: center;
+	}
+
+	@keyframes slideInDown {
+		from {
+			opacity: 0;
+			transform: translateY(-10px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	/* Mobile responsive adjustments for user menu */
+	@media (max-width: 768px) {
+		.user-menu-container {
+			order: -1;
+			margin-right: auto;
+		}
+
+		.user-menu-trigger {
+			padding: 0.5rem 0.75rem;
+			font-size: 0.85rem;
+		}
+
+		.user-name {
+			max-width: 80px;
+		}
+
+		.user-menu {
+			right: auto;
+			left: 0;
+			min-width: 180px;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.user-menu-trigger {
+			padding: 0.4rem 0.6rem;
+		}
+
+		.user-name {
+			display: none;
+		}
+
+		.user-menu {
+			min-width: 160px;
+		}
+	}
+
+	/* Modal Styles */
+	.modal-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.5);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 2000;
+		padding: 1rem;
+	}
+
+	.modal {
+		background: var(--gradient-dark);
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		max-width: 450px;
+		width: 100%;
+		max-height: 90vh;
+		overflow-y: auto;
+		box-shadow: var(--shadow-hard);
+	}
+
+	.modal-header {
+		padding: 1.5rem;
+		border-bottom: 1px solid var(--border);
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.modal-header h3 {
+		margin: 0;
+		font-size: 1.25rem;
+		font-weight: 600;
+		color: var(--text);
+	}
+
+	.modal-close {
+		background: none;
+		border: none;
+		font-size: 1.5rem;
+		cursor: pointer;
+		padding: 0.25rem;
+		color: var(--text-muted);
+		transition: var(--transition-fast);
+	}
+
+	.modal-close:hover {
+		color: var(--text);
+	}
+
+	.modal-body {
+		padding: 1.5rem;
+	}
+
+	.modal-footer {
+		padding: 1.5rem;
+		border-top: 1px solid var(--border);
+		display: flex;
+		gap: 1rem;
+		justify-content: flex-end;
+	}
+
+	.form-group {
+		margin-bottom: 1.5rem;
+	}
+
+	.form-group label {
+		display: block;
+		margin-bottom: 0.5rem;
+		font-weight: 600;
+		color: var(--text);
+		font-size: 0.9rem;
+	}
+
+	.alert {
+		padding: 1rem;
+		border-radius: 6px;
+		margin-bottom: 1rem;
+	}
+
+	.alert-info {
+		background: rgba(59, 130, 246, 0.1);
+		border: 1px solid rgba(59, 130, 246, 0.3);
+		color: #3b82f6;
+		font-size: 0.9rem;
+	}
+
+	@media (max-width: 480px) {
+		.modal {
+			margin: 0.5rem;
+		}
+
+		.modal-header,
+		.modal-body,
+		.modal-footer {
+			padding: 1rem;
+		}
 	}
 </style>

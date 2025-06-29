@@ -9,7 +9,9 @@
 4. **Memberships** (`/memberships`) - GC and PT membership processing
 5. **Bulk Import** (`/memberships/bulk-import`) - CSV bulk membership import with validation
 6. **Reporting** (`/reporting`) - Financial reports and renewal tracking
-7. **Settings** (`/settings`) - Password-protected admin customization
+7. **Users** (`/users`) - ✅ NEW (2025-06-29) - User account management with RBAC
+8. **Authentication** (`/login`, `/logout`) - ✅ NEW (2025-06-29) - JWT-based authentication system
+9. **Settings** (`/settings`) - Password-protected admin customization
 
 ### Page Architecture Pattern
 ```javascript
@@ -129,6 +131,31 @@ try {
             plan_name: string
         }
     ]
+}
+```
+
+### Authentication API Endpoints ✅ NEW (2025-06-29)
+
+#### Change Password API
+- **Endpoint**: `/api/auth/change-password`
+- **Method**: POST
+- **Authentication**: Required (verified via locals.user)
+- **Request Body**: JSON with currentPassword and newPassword
+- **Validation**: Current password verification, 8+ character minimum for new password
+- **Security**: All existing sessions invalidated after password change
+
+```javascript
+// API request format
+{
+    currentPassword: string,
+    newPassword: string
+}
+
+// API response format
+{
+    success: boolean,
+    message?: string,
+    error?: string
 }
 ```
 
@@ -267,6 +294,23 @@ try {
 - **Detailed Transaction View**: Complete financial breakdown with member names and transaction details
 - **Server + API Integration**: ✅ Uses both server-side rendering AND dynamic API loading for optimal performance
 - **Responsive Design**: Mobile-optimized tables with horizontal scrolling and touch-friendly interfaces
+
+### Users Page Features ✅ NEW (2025-06-29)
+- **Complete User CRUD**: Create, read, update, delete operations with permission checks
+- **Role Management**: Admin, Trainer, Member role assignment with permission descriptions
+- **Advanced Filtering**: Search by username/email, filter by status/role
+- **Password Reset**: Admin password reset functionality with session invalidation
+- **Security Features**: Self-deletion prevention, comprehensive activity logging
+- **Responsive Design**: Mobile-optimized table with horizontal scrolling
+- **Modal System**: Create/edit/delete modals with proper validation and loading states
+
+### Authentication System Features ✅ NEW (2025-06-29)
+- **Login Page**: JWT authentication with account lockout protection
+- **Session Management**: 1-hour access tokens, 7-day refresh tokens
+- **Password Security**: bcrypt hashing, 8+ character minimum, failed attempt tracking
+- **Account Lockout**: 5 failed attempts = 15-minute lockout with automatic reset
+- **Password Change**: User dropdown with modal-based password change functionality
+- **Session Cleanup**: Automatic expired session cleanup with proper resource management
 
 ### Settings Page Features
 - **Password Protection**: Hard-coded 'theadmin' password
