@@ -132,6 +132,68 @@ try {
 }
 ```
 
+### Reports API Endpoints ✅ NEW (2025-06-28)
+
+#### Upcoming Renewals API
+- **Endpoint**: `/api/reports/renewals`
+- **Method**: GET
+- **Query Parameters**: `?days=30` (default: 30 days ahead)
+- **Response**: Membership renewals expiring within specified timeframe
+
+```javascript
+// API response format
+{
+    success: true,
+    data: [
+        {
+            id: number,
+            member_id: number,
+            plan_id: number,
+            start_date: string,        // YYYY-MM-DD format
+            end_date: string,          // YYYY-MM-DD format
+            amount_paid: number,
+            purchase_date: string,
+            membership_type: string,
+            status: string,
+            member_name: string,       // From members.name
+            member_phone: string,      // From members.phone
+            plan_name: string          // From group_plans.display_name
+        }
+    ],
+    days: number
+}
+```
+
+#### Financial Reports API
+- **Endpoint**: `/api/reports/financial`
+- **Method**: GET
+- **Query Parameters**: `?start=YYYY-MM-DD&end=YYYY-MM-DD`
+- **Response**: Comprehensive financial data with revenue breakdowns
+
+```javascript
+// API response format
+{
+    success: true,
+    total_revenue: number,
+    gc_revenue: number,           // Group class revenue
+    pt_revenue: number,           // Personal training revenue
+    total_transactions: number,
+    gc_transactions: number,
+    pt_transactions: number,
+    avg_transaction: number,
+    daily_average: number,
+    transactions: [
+        {
+            date: string,             // YYYY-MM-DD format
+            member_name: string,
+            type: 'group_class' | 'personal_training',
+            plan_or_sessions: string,
+            amount: number
+        }
+    ]
+}
+```
+
 ## API Endpoint Troubleshooting
 
 ### Member History API (`/api/members/[id]/memberships`)
@@ -196,10 +258,15 @@ try {
 - **Mobile Table Responsiveness**: Horizontal scrolling + `white-space: nowrap` for badges and status elements
 - **Touch Target Optimization**: Minimum 44px button heights with adequate spacing for mobile accessibility
 
-### Reporting Page Features
-- **Date Range Selection**: Flexible financial reporting periods
-- **Renewal Tracking**: Upcoming renewals in next 30 days
-- **Export Capabilities**: Financial data aggregation
+### Reporting Page Features ✅ ENHANCED (2025-06-28)
+- **Dual Report Types**: Toggle between Financial Reports and Upcoming Renewals
+- **Date Range Selection**: Flexible financial reporting periods with real-time API updates
+- **Renewal Tracking**: ✅ Fixed - Displays actual upcoming renewals (next 30 days) with proper data flow
+- **Export Capabilities**: Financial data aggregation for Excel/CSV download
+- **Real-time Summary Cards**: Critical/Warning/Total renewal counts with color-coded status indicators
+- **Detailed Transaction View**: Complete financial breakdown with member names and transaction details
+- **Server + API Integration**: ✅ Uses both server-side rendering AND dynamic API loading for optimal performance
+- **Responsive Design**: Mobile-optimized tables with horizontal scrolling and touch-friendly interfaces
 
 ### Settings Page Features
 - **Password Protection**: Hard-coded 'theadmin' password
@@ -220,3 +287,11 @@ try {
 - **Validation Errors**: Real-time clearing, specific field targeting
 - **Network Errors**: Generic error messages with retry suggestions
 - **File Upload**: Specific validation for size, type, and processing errors
+
+## Context7 MCP Coding Dependency ⚠️ CRITICAL
+- **MANDATORY REQUIREMENT**: Context7 MCP connection is REQUIRED before any routes/API coding tasks
+- **PRE-CODING CHECK**: Always verify `claude mcp get context7` shows active connection
+- **REFUSAL PROTOCOL**: If Context7 MCP is not available, refuse coding with message: "Context7 MCP connection required for coding tasks. Please ensure context7 MCP server is running."
+- **CONNECTION FIRST**: Establish Context7 MCP connection before starting any routes/API development work
+- **DOCKER TROUBLESHOOTING**: Use standard protocol: check `docker ps | grep context7` → start if needed → configure MCP client
+- **NO EXCEPTIONS**: This applies to ALL routes and API coding tasks in this module

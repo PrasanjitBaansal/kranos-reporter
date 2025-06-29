@@ -5,12 +5,11 @@ export const load = async () => {
     try {
         await db.connect();
         
-        const [members, groupPlans, groupClassMemberships, ptMemberships] = await Promise.all([
-            db.getMembers(true),
-            db.getGroupPlans(true),
-            db.getGroupClassMemberships(),
-            db.getPTMemberships()
-        ]);
+        // Since better-sqlite3 methods are synchronous, no need for Promise.all
+        const members = db.getMembers(true);
+        const groupPlans = db.getGroupPlans(true);
+        const groupClassMemberships = db.getGroupClassMemberships();
+        const ptMemberships = db.getPTMemberships();
 
         return {
             members,
@@ -149,10 +148,10 @@ export const actions = {
 
         try {
             await db.connect();
-            const result = await db.createPTMembership(membership);
+            const result = db.createPTMembership(membership);
             
             // Update member status after creating PT membership
-            await db.updateMemberStatus(membership.member_id);
+            db.updateMemberStatus(membership.member_id);
             
             return { success: true, membership: result, type: 'pt' };
         } catch (error) {
@@ -177,10 +176,10 @@ export const actions = {
 
         try {
             await db.connect();
-            await db.updatePTMembership(id, membership);
+            db.updatePTMembership(id, membership);
             
             // Update member status after updating PT membership
-            await db.updateMemberStatus(membership.member_id);
+            db.updateMemberStatus(membership.member_id);
             
             return { success: true, type: 'pt' };
         } catch (error) {
@@ -199,14 +198,14 @@ export const actions = {
             await db.connect();
             
             // Get membership details before deleting to update member status
-            const membership = await db.getPTMembershipById(id);
+            const membership = db.getPTMembershipById(id);
             const memberId = membership?.member_id;
             
-            await db.deletePTMembership(id);
+            db.deletePTMembership(id);
             
             // Update member status after deleting PT membership
             if (memberId) {
-                await db.updateMemberStatus(memberId);
+                db.updateMemberStatus(memberId);
             }
             
             return { success: true, type: 'pt' };

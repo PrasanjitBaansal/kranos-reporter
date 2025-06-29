@@ -15,11 +15,9 @@ export async function GET({ params }) {
 		// Ensure database connection before querying
 		await db.connect();
 
-		// Get both group class and PT memberships for the member
-		const [gcMemberships, ptMemberships] = await Promise.all([
-			db.getGroupClassMembershipsByMemberId(memberId),
-			db.getPTMembershipsByMemberId(memberId)
-		]);
+		// Get both group class and PT memberships for the member (synchronous calls)
+		const gcMemberships = db.getGroupClassMembershipsByMemberId(memberId);
+		const ptMemberships = db.getPTMembershipsByMemberId(memberId);
 
 		console.log(`API: Found ${gcMemberships.length} GC and ${ptMemberships.length} PT memberships`);
 

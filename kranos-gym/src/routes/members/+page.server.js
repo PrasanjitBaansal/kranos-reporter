@@ -63,24 +63,30 @@ export const actions = {
         try {
             await db.connect();
             
-            // Get current member data first
-            const currentMember = await db.getMemberById(id);
+            // OPTIMIZATION: Batch all validation queries to reduce database roundtrips
+            const phoneChanged = member.phone !== undefined;
+            
+            // Parallel query execution for better performance
+            const [currentMember, duplicatePhoneCheck, membershipCheck] = await Promise.all([
+                db.getMemberById(id),
+                phoneChanged ? db.getMemberByPhone(member.phone) : null,
+                phoneChanged ? db.hasExistingMemberships(id) : null
+            ]);
+            
             if (!currentMember) {
                 return { success: false, error: 'Member not found.' };
             }
 
-            // Check if phone number is being changed
-            if (member.phone !== currentMember.phone) {
-                // Check if member has existing memberships - if so, don't allow phone change
-                const hasExistingMemberships = await db.hasExistingMemberships(id);
-                if (hasExistingMemberships) {
+            // OPTIMIZATION: Only validate phone if it's actually being changed
+            if (phoneChanged && member.phone !== currentMember.phone) {
+                // Check membership history constraint
+                if (membershipCheck) {
                     return { success: false, error: 'Cannot change phone number for members with existing membership history.' };
                 }
 
-                // Check for duplicate phone number (excluding current member)
-                const existingMember = await db.getMemberByPhone(member.phone);
-                if (existingMember && existingMember.id !== id) {
-                    if (existingMember.status === 'Deleted') {
+                // Check for duplicate phone number (more efficient validation)
+                if (duplicatePhoneCheck && duplicatePhoneCheck.id !== id) {
+                    if (duplicatePhoneCheck.status === 'Deleted') {
                         return { success: false, error: 'This phone number belongs to a deleted member and cannot be reused.' };
                     } else {
                         return { success: false, error: 'Phone number already exists. Please use a different phone number.' };
@@ -91,6 +97,7 @@ export const actions = {
             // Preserve existing status
             member.status = currentMember.status;
             
+            // OPTIMIZATION: Update member data
             await db.updateMember(id, member);
             return { success: true };
         } catch (error) {

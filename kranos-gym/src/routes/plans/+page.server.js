@@ -29,7 +29,7 @@ export const actions = {
 
         try {
             await db.connect();
-            const result = await db.createGroupPlan(plan);
+            const result = db.createGroupPlan(plan);
             return { success: true, plan: result };
         } catch (error) {
             return { success: false, error: error.message };
@@ -53,7 +53,7 @@ export const actions = {
 
         try {
             await db.connect();
-            await db.updateGroupPlan(id, plan);
+            db.updateGroupPlan(id, plan);
             return { success: true };
         } catch (error) {
             return { success: false, error: error.message };

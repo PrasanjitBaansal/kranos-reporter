@@ -1,6 +1,8 @@
 <script>
 	import { onMount } from 'svelte';
 	
+	export let data;
+	
 	let reportType = 'financial'; // 'financial' or 'renewals'
 	let dateRange = {
 		start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
@@ -8,7 +10,7 @@
 	};
 	let isLoading = false;
 	let financialData = null;
-	let renewalsData = [];
+	let renewalsData = data.upcomingRenewals || [];
 	let exportFormat = 'excel';
 	
 	onMount(async () => {
@@ -27,7 +29,10 @@
 		try {
 			const response = await fetch(`/api/reports/financial?start=${dateRange.start}&end=${dateRange.end}`);
 			if (response.ok) {
-				financialData = await response.json();
+				const result = await response.json();
+				if (result.success) {
+					financialData = result;
+				}
 			}
 		} catch (error) {
 			console.error('Failed to load financial report:', error);
@@ -38,9 +43,12 @@
 	
 	async function loadRenewalsReport() {
 		try {
-			const response = await fetch('/api/reports/renewals');
+			const response = await fetch('/api/reports/renewals?days=30');
 			if (response.ok) {
-				renewalsData = await response.json();
+				const result = await response.json();
+				if (result.success) {
+					renewalsData = result.data || [];
+				}
 			}
 		} catch (error) {
 			console.error('Failed to load renewals report:', error);
