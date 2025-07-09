@@ -2,6 +2,8 @@
 
 A modern, full-featured gym management system built with SvelteKit, featuring a sleek dark theme with neon styling and comprehensive member and membership management capabilities.
 
+> **Current State**: Single-gym SQLite-based application (reverted from multi-tenant PostgreSQL architecture on 2025-07-09)
+
 ## ✨ Features
 
 ### 📊 Dashboard
@@ -48,11 +50,12 @@ A modern, full-featured gym management system built with SvelteKit, featuring a 
 ## 🚀 Technology Stack
 
 - **Frontend**: SvelteKit 2.x with Svelte 5
-- **Database**: SQLite3 with comprehensive schema
-- **Styling**: Custom CSS with CSS Variables
+- **Database**: SQLite with better-sqlite3 (single-gym setup)
+- **Styling**: Custom CSS with CSS Variables (dark theme with neon accents)
 - **Build Tool**: Vite 6.x
 - **Package Manager**: npm
 - **Data Migration**: Excel to SQLite conversion
+- **Architecture**: Single-gym application (reverted from multi-tenant)
 
 ## 📦 Installation
 
@@ -83,6 +86,25 @@ A modern, full-featured gym management system built with SvelteKit, featuring a 
    ```
    http://localhost:5173
    ```
+
+## 🔐 Login Credentials
+
+### Admin Account
+- **Username**: `pjb`
+- **Password**: `admin123`
+- **Access**: Full system access (create, edit, delete all resources)
+
+### Trainer Account  
+- **Username**: `niranjan`
+- **Password**: `trainer123`
+- **Access**: View-only access to members, plans, and memberships
+
+### Member Accounts
+- **Username**: Based on member name (e.g., `johndoe`, `janesmith`)
+- **Password**: `member123` (default for all members)
+- **Access**: Can only view their own profile and membership history
+
+> **Important**: All users should change their passwords after first login
 
 ## 🗄️ Database Schema
 
@@ -171,10 +193,14 @@ The system comes with migrated sample data:
 
 ## 🔒 Security Features
 
-- Input validation on all forms
-- SQL injection prevention
-- Phone number uniqueness constraints
-- Proper error handling and user feedback
+- **Authentication**: JWT-based with refresh tokens
+- **Authorization**: Role-based access control (RBAC)
+- **Password Security**: bcrypt hashing with salt rounds
+- **Account Protection**: Failed login attempt tracking and lockout
+- **Session Management**: Secure httpOnly cookies
+- **Input Validation**: Client and server-side validation
+- **SQL Injection Prevention**: Parameterized queries
+- **Audit Logging**: User activity and security event tracking
 
 ## 🌐 Browser Support
 

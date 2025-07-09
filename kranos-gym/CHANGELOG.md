@@ -2,6 +2,26 @@
 
 All notable changes to the Kranos Gym Management System will be documented in this file.
 
+## [2025-07-09] - Architecture Reversion & User Account Setup
+
+### Changed
+- **Reverted to Single-Gym Architecture**
+  - Removed multi-tenant functionality (reverted commit `1b3d6b0`)
+  - Removed PostgreSQL support (reverted to commit `f2c98f6`)
+  - Application now runs as single-gym setup for Kranos MMA only
+  - Database reverted to SQLite with better-sqlite3
+  - Lost features: multi-tenant support, PostgreSQL database, authentication removal, PM system removal
+  - Created backup branch `backup-multi-tenant-state` containing multi-tenant + PostgreSQL code
+
+### Added
+- **User Account Creation**
+  - Created admin account for Prasanjit (username: pjb)
+  - Created trainer account for Niranjan (username: niranjan)
+  - Created 71 member accounts (one for each active gym member)
+  - Total of 73 user accounts in the system
+  - All accounts have default passwords that should be changed after first login
+  - Script: `setup-user-accounts.js` for automated account creation
+
 ## [Unreleased]
 
 ### Added

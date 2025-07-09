@@ -1,5 +1,39 @@
 # Kranos Gym Management System - Project Coordination
 
+## 🔄 CURRENT PROJECT STATE (Updated: 2025-07-09)
+**Architecture**: Single-gym SQLite-based application for Kranos MMA
+**Database**: SQLite with better-sqlite3 (reverted from PostgreSQL)
+**Multi-tenant**: Removed (reverted from multi-tenant architecture)
+**Current Commit**: `f2c98f6` - Members portal implementation
+**Backup Branches**: 
+- `backup-multi-tenant-state` - Contains multi-tenant + PostgreSQL code if needed
+
+### Recent Updates
+1. **Architecture Reversion** (2025-07-09):
+   - Removed multi-tenant functionality (reverted commit `1b3d6b0`)
+   - Removed PostgreSQL support (reverted to commit `f2c98f6`)
+   - Application now single-gym for Kranos MMA only
+   - Database reverted to SQLite with better-sqlite3
+
+2. **User Accounts Created** (2025-07-09):
+   - **Admin**: Prasanjit (username: pjb, email: baansalprasanjit@gmail.com)
+   - **Trainer**: Niranjan (username: niranjan)
+   - **Members**: 71 member accounts (one for each active gym member)
+   - **Total Users**: 73 (1 admin + 1 trainer + 71 members)
+
+### User Account Summary
+- **Admin Login**: username: `pjb`, password: `admin123`
+- **Trainer Login**: username: `niranjan`, password: `trainer123`
+- **Member Login**: username: `[firstname+lastname]`, password: `member123`
+- **Note**: All users should change passwords after first login
+
+### RBAC System Status ✅
+- **Authentication**: JWT-based with refresh tokens (fully functional)
+- **Authorization**: Route-level and UI-level access control
+- **Roles**: Admin (full access), Trainer (view-only), Member (profile only)
+- **Permissions**: 32 granular permissions across 9 categories
+- **Security**: Password hashing with bcrypt, account lockout protection
+
 ## 📁 PROJECT DIRECTORY
 **Working Directory**: `/Users/prasanjit/Desktop/kranos-reporter/kranos-gym/`
 
