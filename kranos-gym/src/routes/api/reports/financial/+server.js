@@ -6,32 +6,34 @@ export async function GET({ url }) {
 	const db = new Database();
 	try {
 		// Get and validate date range parameters from query string
-		let startDate = url.searchParams.get('start') || 
-			new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
-		let endDate = url.searchParams.get('end') || 
-			new Date().toISOString().split('T')[0];
+		let startDate = url.searchParams.get('startDate');
+		let endDate = url.searchParams.get('endDate');
 		
-		// Validate date format (YYYY-MM-DD)
+		// Validate date format (YYYY-MM-DD) if dates are provided
 		const datePattern = /^\d{4}-\d{2}-\d{2}$/;
-		if (!datePattern.test(startDate) || !datePattern.test(endDate)) {
+		if (startDate && !datePattern.test(startDate)) {
 			return json({ 
-				success: false, 
 				error: 'Invalid date format. Use YYYY-MM-DD.' 
 			}, { status: 400 });
 		}
 		
-		// Ensure end date is not before start date
-		if (new Date(endDate) < new Date(startDate)) {
+		if (endDate && !datePattern.test(endDate)) {
 			return json({ 
-				success: false, 
-				error: 'End date cannot be before start date.' 
+				error: 'Invalid date format. Use YYYY-MM-DD.' 
+			}, { status: 400 });
+		}
+		
+		// Ensure end date is not before start date if both provided
+		if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
+			return json({ 
+				error: 'Start date must be before end date' 
 			}, { status: 400 });
 		}
 		
 		console.log(`API: Fetching financial report from ${startDate} to ${endDate}`);
 		
 		// Ensure database connection before querying
-		await db.connect();
+		db.connect();
 
 		// Get financial summary data
 		const reportData = db.getFinancialReport(startDate, endDate);
@@ -65,20 +67,16 @@ export async function GET({ url }) {
 			transactions: detailedTransactions
 		};
 
-		return json({
-			success: true,
-			...financialReport
-		});
+		return json(financialReport);
 
 	} catch (error) {
 		console.error('API Error fetching financial report:', error);
 		return json({ 
-			success: false, 
-			error: 'Failed to fetch financial report' 
+			error: 'Failed to generate financial report' 
 		}, { status: 500 });
 	} finally {
 		try {
-			await db.close();
+			db.close();
 		} catch (closeError) {
 			console.error('API Error closing database:', closeError);
 		}

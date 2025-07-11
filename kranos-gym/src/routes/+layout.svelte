@@ -233,20 +233,22 @@
 				</button>
 			</div>
 			
-			<div class="nav-menu" class:active={isMenuOpen}>
-				{#each navItems as item}
-					<a 
-						href={item.path} 
-						class="nav-link" 
-						class:active={$page.url.pathname === item.path}
-						on:click={() => isMenuOpen = false}
-						aria-label="Navigate to {item.label}"
-					>
-						<span class="nav-icon">{item.icon}</span>
-						<span class="nav-label">{item.label}</span>
-					</a>
-				{/each}
-			</div>
+			{#if user}
+				<div class="nav-menu" class:active={isMenuOpen}>
+					{#each navItems as item}
+						<a 
+							href={item.path} 
+							class="nav-link" 
+							class:active={$page.url.pathname === item.path}
+							on:click={() => isMenuOpen = false}
+							aria-label="Navigate to {item.label}"
+						>
+							<span class="nav-icon">{item.icon}</span>
+							<span class="nav-label">{item.label}</span>
+						</a>
+					{/each}
+				</div>
+			{/if}
 			
 			<!-- User Menu -->
 			{#if user}

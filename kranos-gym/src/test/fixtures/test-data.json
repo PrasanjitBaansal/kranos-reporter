@@ -1,0 +1,105 @@
+{
+  "plans": [
+    {
+      "id": 1,
+      "name": "1 Month",
+      "displayName": "1 Month",
+      "duration": 1,
+      "price": 2000,
+      "registrationFee": 500,
+      "status": "Active"
+    },
+    {
+      "id": 2,
+      "name": "3 Months",
+      "displayName": "3 Months",
+      "duration": 3,
+      "price": 5500,
+      "registrationFee": 500,
+      "status": "Active"
+    },
+    {
+      "id": 3,
+      "name": "6 Months",
+      "displayName": "6 Months",
+      "duration": 6,
+      "price": 10000,
+      "registrationFee": 500,
+      "status": "Active"
+    },
+    {
+      "id": 4,
+      "name": "12 Months",
+      "displayName": "1 Year",
+      "duration": 12,
+      "price": 18000,
+      "registrationFee": 500,
+      "status": "Active"
+    },
+    {
+      "id": 5,
+      "name": "PT-10",
+      "displayName": "10 Sessions",
+      "duration": 0,
+      "price": 5000,
+      "registrationFee": 0,
+      "status": "Active",
+      "type": "PT",
+      "sessions": 10
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "$2b$10$XQq9g8kR5JQD8L3FMCKl9uGPfDJ0pGfqB4aKBmm6cYHPLPL9Oyu6e",
+      "role": "admin",
+      "isActive": true
+    },
+    {
+      "id": 2,
+      "username": "trainer",
+      "password": "$2b$10$XQq9g8kR5JQD8L3FMCKl9uGPfDJ0pGfqB4aKBmm6cYHPLPL9Oyu6e",
+      "role": "trainer",
+      "isActive": true
+    },
+    {
+      "id": 3,
+      "username": "member",
+      "password": "$2b$10$XQq9g8kR5JQD8L3FMCKl9uGPfDJ0pGfqB4aKBmm6cYHPLPL9Oyu6e",
+      "role": "member",
+      "isActive": true
+    }
+  ],
+  "paymentCategories": [
+    "Rent",
+    "Utilities",
+    "Trainer Fees",
+    "Equipment",
+    "Maintenance",
+    "Supplies",
+    "Marketing",
+    "Other"
+  ],
+  "paymentMethods": [
+    "Cash",
+    "Card",
+    "UPI",
+    "Bank Transfer",
+    "Cheque"
+  ],
+  "memberStatuses": [
+    "New",
+    "Active",
+    "Inactive",
+    "Deleted"
+  ],
+  "defaultSettings": {
+    "primaryColor": "#3B82F6",
+    "secondaryColor": "#10B981",
+    "accentColor": "#F59E0B",
+    "logoPath": "/logo.png",
+    "faviconPath": "/favicon.png",
+    "businessName": "Kranos Gym"
+  }
+}

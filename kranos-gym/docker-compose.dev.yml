@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  kranos-gym-dev:
+    build: 
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: kranos-gym-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      # Mount source code for hot reload
+      - .:/app
+      - /app/node_modules
+      # Mount database
+      - ./kranos.db:/app/kranos.db
+      # Mount uploads
+      - ./static/uploads:/app/static/uploads
+    environment:
+      - NODE_ENV=development
+      - HOST=0.0.0.0
+      - PORT=5173
+    command: npm run dev
+    stdin_open: true
+    tty: true

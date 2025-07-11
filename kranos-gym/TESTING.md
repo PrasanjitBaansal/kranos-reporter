@@ -1,6 +1,147 @@
 # Testing Guide - Kranos Gym Management System
 
-This document provides comprehensive information about the testing infrastructure and best practices for the Kranos Gym Management System.
+This document provides comprehensive information about the testing infrastructure, strategy, and best practices for the Kranos Gym Management System.
+
+## Testing Strategy
+
+### Testing Philosophy
+Our testing approach follows a comprehensive strategy designed to ensure reliability, maintainability, and confidence in the Kranos Gym Management System. We prioritize:
+
+1. **User-Centric Testing**: Focus on real user workflows and scenarios
+2. **Risk-Based Testing**: Prioritize critical business functions and high-risk areas
+3. **Comprehensive Coverage**: Balance between unit, integration, and E2E tests
+4. **Maintainable Tests**: Write clear, focused tests that are easy to update
+5. **Fast Feedback**: Quick test execution for rapid development cycles
+
+### Test Pyramid Approach
+
+```
+          /\
+         /E2E\         (10-15%) - Critical user journeys
+        /------\
+       /Component\     (30-35%) - UI components and interactions
+      /----------\
+     /Integration \    (25-30%) - API and database operations
+    /-------------\
+   /    Unit      \   (25-30%) - Business logic and utilities
+  /----------------\
+```
+
+### Testing Priorities
+
+#### P0 - Critical (Must Test)
+1. **Authentication & Authorization**
+   - Login/logout flows
+   - Role-based access control
+   - Session management
+   - Security vulnerabilities
+
+2. **Financial Operations**
+   - Payment recording and tracking
+   - Financial calculations
+   - Revenue reporting
+   - Data integrity
+
+3. **Member Management**
+   - CRUD operations
+   - Status calculations
+   - Unique constraints (phone numbers)
+   - Data validation
+
+4. **Database Operations**
+   - Transaction integrity
+   - Concurrent access
+   - Data persistence
+   - Error recovery
+
+#### P1 - High Priority
+1. **Membership Management**
+   - Creation and renewal
+   - Type determination
+   - Session tracking
+   - Expiry calculations
+
+2. **Reporting Functions**
+   - Data accuracy
+   - Export functionality
+   - Date range filtering
+   - Performance with large datasets
+
+3. **Plan Management**
+   - Plan configurations
+   - Auto-naming logic
+   - Pricing calculations
+
+#### P2 - Medium Priority
+1. **UI/UX Features**
+   - Theme switching
+   - Responsive design
+   - Form validations
+   - Loading states
+
+2. **Settings Management**
+   - Configuration persistence
+   - File uploads
+   - Branding customization
+
+3. **Search and Filtering**
+   - Search accuracy
+   - Filter combinations
+   - Performance optimization
+
+### Module Testing Requirements
+
+#### Authentication Module
+- **Unit Tests**: JWT utilities, password hashing, token validation
+- **Integration Tests**: Login endpoints, session management
+- **E2E Tests**: Complete auth flow, role-based redirects
+- **Security Tests**: CSRF protection, SQL injection prevention
+
+#### Members Module
+- **Unit Tests**: Status calculations, validation rules
+- **Component Tests**: Form behavior, list filtering
+- **Integration Tests**: CRUD operations, search functionality
+- **E2E Tests**: Member lifecycle management
+
+#### Payments Module
+- **Unit Tests**: Financial calculations, category management
+- **Component Tests**: Expense forms, payment summaries
+- **Integration Tests**: Transaction recording, reporting
+- **E2E Tests**: Payment tracking workflow
+
+#### Reporting Module
+- **Unit Tests**: Data aggregation logic, date calculations
+- **Component Tests**: Chart rendering, filter controls
+- **Integration Tests**: Report generation, export functions
+- **Performance Tests**: Large dataset handling
+
+### Test Data Strategy
+
+#### Test Database Management
+1. **Isolated Test Database**: Separate SQLite instance for tests
+2. **Seed Data**: Consistent, realistic test data
+3. **Reset Between Tests**: Clean state for each test
+4. **Transaction Rollback**: For integration tests
+
+#### Test Data Categories
+1. **Basic Seed Data**: Minimal data for unit tests
+2. **Scenario Data**: Complex data for integration tests
+3. **Edge Case Data**: Boundary conditions and limits
+4. **Performance Data**: Large datasets for stress testing
+
+### Quality Metrics
+
+#### Coverage Targets
+- **Overall**: 80% minimum
+- **Critical Paths**: 95% minimum
+- **New Code**: 90% minimum
+- **Business Logic**: 95% minimum
+
+#### Test Quality Indicators
+1. **Test Stability**: <1% flaky tests
+2. **Execution Time**: <5 minutes for unit/component tests
+3. **Maintainability**: Clear naming, single responsibility
+4. **Documentation**: Well-commented complex scenarios
 
 ## Testing Stack
 
@@ -55,6 +196,7 @@ npm run test:all
 
 ## Project Structure
 
+### Current Test Structure
 ```
 ├── src/
 │   ├── test/
@@ -81,6 +223,137 @@ npm run test:all
 │       └── complete-user-journey.spec.js
 ├── vitest.config.js              # Vitest configuration
 └── playwright.config.js          # Playwright configuration
+```
+
+### Recommended Complete Test Structure
+```
+├── src/
+│   ├── test/
+│   │   ├── setup.js              # Global test setup
+│   │   ├── utils.js              # Test utilities and helpers
+│   │   ├── factories/            # Test data factories
+│   │   │   ├── member.factory.js
+│   │   │   ├── membership.factory.js
+│   │   │   └── payment.factory.js
+│   │   ├── fixtures/             # Static test data
+│   │   │   ├── members.json
+│   │   │   ├── plans.json
+│   │   │   └── payments.json
+│   │   └── helpers/              # Testing helpers
+│   │       ├── auth.helper.js
+│   │       ├── db.helper.js
+│   │       └── api.helper.js
+│   ├── lib/
+│   │   ├── auth/
+│   │   │   ├── jwt.test.js       # JWT utility tests
+│   │   │   ├── bcrypt.test.js    # Password hashing tests
+│   │   │   └── session.test.js   # Session management tests
+│   │   ├── db/
+│   │   │   ├── database.test.js  # Database operation tests
+│   │   │   ├── transactions.test.js # Transaction tests
+│   │   │   └── migrations.test.js # Migration tests
+│   │   ├── payments/
+│   │   │   ├── calculations.test.js # Payment calculation tests
+│   │   │   ├── validation.test.js   # Payment validation tests
+│   │   │   └── service.test.js      # Payment service tests
+│   │   ├── memberships/
+│   │   │   ├── type-determination.test.js
+│   │   │   ├── overlap-check.test.js
+│   │   │   └── expiry.test.js
+│   │   ├── utils/
+│   │   │   ├── date.test.js      # Date utility tests
+│   │   │   ├── validation.test.js # Validation utility tests
+│   │   │   └── format.test.js    # Formatting tests
+│   │   └── components/
+│   │       ├── MemberDetailsModal.test.js
+│   │       ├── PasswordModal.test.js
+│   │       ├── Toast.test.js
+│   │       └── LoadingSpinner.test.js
+│   └── routes/
+│       ├── +layout.test.js       # Layout component tests
+│       ├── +page.test.js         # Dashboard tests
+│       ├── +page.server.test.js  # Dashboard server tests
+│       ├── api/
+│       │   ├── auth/
+│       │   │   └── +server.test.js
+│       │   ├── members/
+│       │   │   └── +server.test.js
+│       │   ├── payments/
+│       │   │   ├── +server.test.js
+│       │   │   └── categories/
+│       │   │       └── +server.test.js
+│       │   └── reports/
+│       │       └── +server.test.js
+│       ├── login/
+│       │   ├── +page.test.js     # Login page tests
+│       │   └── +page.server.test.js # Login server tests
+│       ├── members/
+│       │   ├── +page.test.js     # Members page tests
+│       │   └── +page.server.test.js # Members server tests
+│       ├── memberships/
+│       │   ├── +page.test.js     # Memberships page tests
+│       │   └── +page.server.test.js # Memberships server tests
+│       ├── payments/
+│       │   ├── +page.test.js     # Payments page tests
+│       │   └── +page.server.test.js # Payments server tests
+│       ├── plans/
+│       │   ├── +page.test.js     # Plans page tests
+│       │   └── +page.server.test.js # Plans server tests
+│       ├── reporting/
+│       │   ├── +page.test.js     # Reporting page tests
+│       │   └── +page.server.test.js # Reporting server tests
+│       ├── settings/
+│       │   ├── +page.test.js     # Settings page tests
+│       │   └── +page.server.test.js # Settings server tests
+│       ├── users/
+│       │   ├── +page.test.js     # Users page tests
+│       │   └── +page.server.test.js # Users server tests
+│       └── profile/
+│           ├── +page.test.js     # Profile page tests
+│           └── +page.server.test.js # Profile server tests
+├── tests/
+│   ├── e2e/
+│   │   ├── auth/
+│   │   │   ├── login.spec.js
+│   │   │   ├── logout.spec.js
+│   │   │   └── session.spec.js
+│   │   ├── members/
+│   │   │   ├── crud.spec.js
+│   │   │   ├── search.spec.js
+│   │   │   └── import.spec.js
+│   │   ├── payments/
+│   │   │   ├── expense-tracking.spec.js
+│   │   │   ├── trainer-payments.spec.js
+│   │   │   └── reports.spec.js
+│   │   ├── memberships/
+│   │   │   ├── creation.spec.js
+│   │   │   ├── renewal.spec.js
+│   │   │   └── bulk-import.spec.js
+│   │   ├── workflows/
+│   │   │   ├── complete-user-journey.spec.js
+│   │   │   ├── member-onboarding.spec.js
+│   │   │   └── financial-workflow.spec.js
+│   │   └── accessibility/
+│   │       ├── keyboard-nav.spec.js
+│   │       └── screen-reader.spec.js
+│   ├── integration/
+│   │   ├── api-endpoints.test.js
+│   │   ├── database-transactions.test.js
+│   │   └── file-uploads.test.js
+│   ├── performance/
+│   │   ├── load-testing.js
+│   │   ├── stress-testing.js
+│   │   └── memory-profiling.js
+│   └── security/
+│       ├── auth-security.test.js
+│       ├── input-validation.test.js
+│       └── api-security.test.js
+├── vitest.config.js              # Vitest configuration
+├── playwright.config.js          # Playwright configuration
+└── test-reports/                 # Test reports directory
+    ├── coverage/
+    ├── e2e-results/
+    └── performance/
 ```
 
 ## Test Categories

@@ -61,6 +61,68 @@ export const actions = {
             }
             
             const result = db.createMember(member);
+            
+            // Auto-create user account for the member
+            try {
+                const bcrypt = await import('bcrypt');
+                
+                // Use phone number as username
+                const username = member.phone;
+                
+                // Check if user already exists with this phone
+                const existingUser = db.getUserByUsername(username);
+                if (existingUser) {
+                    console.log(`User account already exists for phone ${username}`);
+                } else {
+                    // Generate temporary password (member123)
+                    const tempPassword = 'member123';
+                    const passwordHash = await bcrypt.hash(tempPassword, 12);
+                    
+                    // Create user account
+                    const userStmt = db.db.prepare(`
+                        INSERT INTO users (
+                            username, email, password_hash, salt, role, full_name,
+                            is_active, is_verified, created_date, last_password_change,
+                            member_id, phone_number
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'), ?, ?)
+                    `);
+                    
+                    const userResult = userStmt.run(
+                        username,
+                        member.email || `${username}@kranosgym.com`,
+                        passwordHash,
+                        'salt',
+                        'member',
+                        member.name,
+                        1,
+                        1,
+                        result.id,
+                        member.phone
+                    );
+                    
+                    console.log(`Auto-created user account: username=${username} (phone) for member ${member.name}`);
+                    
+                    // Log the user creation activity
+                    db.logActivity({
+                        user_id: locals.user.id,
+                        username: locals.user.username,
+                        action: 'auto_create_user',
+                        resource_type: 'user',
+                        resource_id: userResult.lastInsertRowid,
+                        details: {
+                            member_id: result.id,
+                            username: username,
+                            member_name: member.name,
+                            login_method: 'phone_number'
+                        }
+                    });
+                }
+                
+            } catch (userError) {
+                console.error('Failed to auto-create user account:', userError);
+                // Don't fail the member creation if user creation fails
+            }
+            
             return { success: true, member: result };
         } catch (error) {
             return { success: false, error: error.message };
@@ -143,6 +205,23 @@ export const actions = {
         try {
             // Context7-grounded: Use synchronous connection
             db.connect();
+            
+            // First, deactivate the user account if exists
+            const member = db.getMemberById(id);
+            if (member) {
+                // Find user account linked to this member
+                const userStmt = db.db.prepare('SELECT id FROM users WHERE member_id = ?');
+                const user = userStmt.get(id);
+                
+                if (user) {
+                    // Deactivate the user account
+                    const updateUserStmt = db.db.prepare('UPDATE users SET is_active = 0 WHERE id = ?');
+                    updateUserStmt.run(user.id);
+                    console.log(`Deactivated user account for member ID ${id}`);
+                }
+            }
+            
+            // Then soft delete the member
             db.deleteMember(id);
             return { success: true };
         } catch (error) {

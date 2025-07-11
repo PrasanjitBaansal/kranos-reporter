@@ -2,7 +2,7 @@ import Database from '../lib/db/database.js';
 import { validateMemberData, validatePlanData, validateMembershipData } from '../lib/security/sanitize.js';
 import { cachedQuery, withPerformanceLogging } from '../lib/utils/cache.js';
 
-export const load = async ({ url }) => {
+export const load = async ({ url, locals }) => {
     const db = new Database();
     try {
         await db.connect();
@@ -26,6 +26,7 @@ export const load = async ({ url }) => {
         const validPtMemberships = ptMemberships || [];
 
         return {
+            user: locals.user, // Pass user data from locals
             members: validMembers,
             groupPlans: validGroupPlans,
             groupClassMemberships: validGroupClassMemberships,
@@ -42,6 +43,7 @@ export const load = async ({ url }) => {
     } catch (error) {
         console.error('Database load error:', error);
         return {
+            user: locals.user, // Pass user data even on error
             members: [],
             groupPlans: [],
             groupClassMemberships: [],

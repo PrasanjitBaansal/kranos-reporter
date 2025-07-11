@@ -1,11 +1,50 @@
 import { render } from '@testing-library/svelte/svelte5';
 import { vi } from 'vitest';
 
+// Mock navigation functions
+const mockGoto = vi.fn();
+const mockInvalidate = vi.fn();
+const mockInvalidateAll = vi.fn();
+const mockPreloadData = vi.fn();
+const mockPreloadCode = vi.fn();
+const mockBeforeNavigate = vi.fn();
+const mockAfterNavigate = vi.fn();
+
+// Mock toast functions
+const mockShowSuccess = vi.fn();
+const mockShowError = vi.fn();
+const mockShowWarning = vi.fn();
+const mockShowInfo = vi.fn();
+
+// Set up mocks before any imports
+vi.mock('$app/navigation', () => ({
+	goto: mockGoto,
+	invalidate: mockInvalidate,
+	invalidateAll: mockInvalidateAll,
+	preloadData: mockPreloadData,
+	preloadCode: mockPreloadCode,
+	beforeNavigate: mockBeforeNavigate,
+	afterNavigate: mockAfterNavigate
+}));
+
+vi.mock('$lib/stores/toast.js', () => ({
+	showSuccess: mockShowSuccess,
+	showError: mockShowError,
+	showWarning: mockShowWarning,
+	showInfo: mockShowInfo,
+	toastStore: {
+		subscribe: vi.fn(),
+		add: vi.fn(),
+		remove: vi.fn(),
+		clear: vi.fn()
+	}
+}));
+
 /**
  * Custom render function that provides common testing utilities
  */
 export function renderComponent(Component, options = {}) {
-	const { props = {}, ...renderOptions } = options;
+	const { props = {}, authenticated = true, url = '/', ...renderOptions } = options;
 	
 	// Default data structure for components that expect data from server load
 	const defaultData = {
@@ -38,7 +77,7 @@ export function renderComponent(Component, options = {}) {
 	// Mock SvelteKit stores
 	const mockStores = {
 		page: {
-			url: new URL('http://localhost:5173/'),
+			url: new URL(url, 'http://localhost:5173'),
 			params: {},
 			route: { id: null },
 			status: 200,
@@ -50,6 +89,12 @@ export function renderComponent(Component, options = {}) {
 		updated: false
 	};
 	
+	// Mock loading state
+	const loadingState = {
+		isLoading: false,
+		setLoading: vi.fn()
+	};
+	
 	const result = render(Component, {
 		props: mergedProps,
 		context: new Map([
@@ -59,11 +104,18 @@ export function renderComponent(Component, options = {}) {
 		...renderOptions
 	});
 	
+	
 	return {
 		...result,
 		mockStores,
 		mockLocalStorage,
-		loadingState
+		loadingState,
+		mockGoto,
+		mockInvalidateAll,
+		mockShowSuccess,
+		mockShowError,
+		mockShowWarning,
+		mockShowInfo
 	};
 }
 
@@ -431,19 +483,24 @@ export function mockNavigation() {
 	};
 }
 
-// Mock SvelteKit modules globally
-vi.mock('$app/navigation', () => ({
-	goto: vi.fn(),
-	invalidate: vi.fn(),
-	invalidateAll: vi.fn(),
-	preloadData: vi.fn(),
-	preloadCode: vi.fn(),
-	beforeNavigate: vi.fn(),
-	afterNavigate: vi.fn()
-}));
-
+// Mock SvelteKit forms
 vi.mock('$app/forms', () => ({
 	enhance: vi.fn(() => ({
 		destroy: vi.fn()
 	}))
 }));
+
+// Export mock functions for use in tests
+export {
+	mockGoto,
+	mockInvalidate,
+	mockInvalidateAll,
+	mockPreloadData,
+	mockPreloadCode,
+	mockBeforeNavigate,
+	mockAfterNavigate,
+	mockShowSuccess,
+	mockShowError,
+	mockShowWarning,
+	mockShowInfo
+};

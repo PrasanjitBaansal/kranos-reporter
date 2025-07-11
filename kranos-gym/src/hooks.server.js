@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import Database from '$lib/db/database.js';
-import { verifyAccessToken, generateAccessToken } from '$lib/security/jwt-utils.js';
+import { verifyAccessToken, createAccessToken } from '$lib/security/jwt-utils.js';
 
 // Route permission definitions based on role hierarchy
 const ROUTE_PERMISSIONS = {
@@ -47,7 +47,7 @@ export async function handle({ event, resolve }) {
 	const { cookies, url } = event;
 	
 	// Public routes that don't require authentication
-	const publicRoutes = ['/login', '/logout', '/setup'];
+	const publicRoutes = ['/login', '/logout', '/setup', '/api/health'];
 	const isPublicRoute = publicRoutes.some(route => url.pathname.startsWith(route));
 	
 	// Static assets and API routes
@@ -98,7 +98,7 @@ export async function handle({ event, resolve }) {
 		try {
 			const payload = verifyAccessToken(accessToken);
 			user = {
-				id: payload.userId,
+				id: parseInt(payload.sub), // JWT standard uses 'sub' for subject (user ID)
 				username: payload.username,
 				role: payload.role
 			};
@@ -125,11 +125,13 @@ export async function handle({ event, resolve }) {
 				
 				if (userData) {
 					// Generate new access token
-					const newAccessToken = generateAccessToken({
-						userId: userData.id,
+					const { token: newAccessToken } = createAccessToken({
+						id: userData.id,
 						username: userData.username,
-						role: userData.role
-					});
+						role: userData.role,
+						email: userData.email,
+						full_name: userData.full_name
+					}, session.session_token);
 					
 					// Set new access token cookie
 					cookies.set('access_token', newAccessToken, {

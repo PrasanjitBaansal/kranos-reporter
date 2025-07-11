@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/svelte/svelte5';
 import userEvent from '@testing-library/user-event';
-import { renderComponent, mockFetch, mockData } from '../utils.js';
-import ReportingPage from '../../routes/reporting/+page.svelte';
+import { renderComponent, mockFetch, mockData } from '../../utils.js';
+import ReportingPage from '../../../routes/reporting/+page.svelte';
 
 describe('Reporting Page Component', () => {
 	const user = userEvent.setup();
@@ -12,7 +12,15 @@ describe('Reporting Page Component', () => {
 	});
 
 	it('should display reporting page correctly', () => {
-		renderComponent(ReportingPage);
+		renderComponent(ReportingPage, {
+			props: {
+				data: {
+					financialReport: mockData.financialReport,
+					upcomingRenewals: mockData.renewals,
+					settings: mockData.settings
+				}
+			}
+		});
 		
 		expect(screen.getByText('Reports & Analytics')).toBeInTheDocument();
 		expect(screen.getByText('Financial Reports')).toBeInTheDocument();
@@ -20,7 +28,15 @@ describe('Reporting Page Component', () => {
 	});
 
 	it('should switch between report types', async () => {
-		renderComponent(ReportingPage);
+		renderComponent(ReportingPage, {
+			props: {
+				data: {
+					financialReport: mockData.financialReport,
+					upcomingRenewals: mockData.renewals,
+					settings: mockData.settings
+				}
+			}
+		});
 		
 		const renewalsRadio = screen.getByLabelText('Renewal Reports');
 		await fireEvent.click(renewalsRadio);
@@ -29,14 +45,30 @@ describe('Reporting Page Component', () => {
 	});
 
 	it('should display financial report by default', () => {
-		renderComponent(ReportingPage);
+		renderComponent(ReportingPage, {
+			props: {
+				data: {
+					financialReport: mockData.financialReport,
+					upcomingRenewals: mockData.renewals,
+					settings: mockData.settings
+				}
+			}
+		});
 		
 		const financialRadio = screen.getByLabelText('Financial Reports');
 		expect(financialRadio).toBeChecked();
 	});
 
 	it('should load financial data on mount', async () => {
-		renderComponent(ReportingPage);
+		renderComponent(ReportingPage, {
+			props: {
+				data: {
+					financialReport: mockData.financialReport,
+					upcomingRenewals: mockData.renewals,
+					settings: mockData.settings
+				}
+			}
+		});
 		
 		await waitFor(() => {
 			expect(screen.getByText('Total Revenue')).toBeInTheDocument();

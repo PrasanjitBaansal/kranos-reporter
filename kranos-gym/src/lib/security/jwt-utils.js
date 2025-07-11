@@ -30,6 +30,10 @@ function generateTokenId() {
  * @returns {Object} Token object with token, expiresAt, jti
  */
 export function createAccessToken(user, sessionId) {
+    if (!user || !user.id) {
+        throw new Error('User object with id is required for token creation');
+    }
+    
     const jti = generateTokenId();
     const now = Math.floor(Date.now() / 1000);
     const expiresAt = new Date((now + 3600) * 1000); // 1 hour from now
@@ -38,7 +42,7 @@ export function createAccessToken(user, sessionId) {
         // Standard JWT claims
         iss: JWT_ISSUER,
         aud: JWT_AUDIENCE,
-        sub: user.id.toString(),
+        sub: String(user.id), // Ensure it's a string
         iat: now,
         exp: now + 3600, // 1 hour
         jti: jti,
@@ -46,8 +50,8 @@ export function createAccessToken(user, sessionId) {
         // Custom claims
         username: user.username,
         role: user.role,
-        email: user.email,
-        full_name: user.full_name,
+        email: user.email || '',
+        full_name: user.full_name || '',
         session_id: sessionId,
         
         // Security metadata

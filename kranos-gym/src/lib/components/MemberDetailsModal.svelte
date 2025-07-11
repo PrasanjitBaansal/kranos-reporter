@@ -37,13 +37,33 @@
 			if (response.ok) {
 				const data = await response.json();
 				
-				if (data.memberships && Array.isArray(data.memberships)) {
-					membershipHistory = data.memberships;
-					renewalsCount = membershipHistory.filter(m => m.membership_type === 'Renewal').length;
-					totalAmountPaid = membershipHistory.reduce((sum, m) => sum + (m.amount_paid || 0), 0);
-				} else {
-					membershipHistory = [];
-				}
+				// Handle new API response format
+				const gcMemberships = (data.groupMemberships || []).map(m => ({
+					...m,
+					type: 'Group Class',
+					plan_name: m.plan_name || 'Group Class Plan'
+				}));
+				
+				const ptMemberships = (data.ptMemberships || []).map(m => ({
+					...m,
+					type: 'Personal Training',
+					plan_name: `PT Sessions (${m.sessions_total})`,
+					start_date: m.purchase_date,
+					end_date: null,
+					membership_type: 'New',
+					status: 'Active'
+				}));
+				
+				// Combine and sort memberships
+				membershipHistory = [...gcMemberships, ...ptMemberships];
+				membershipHistory.sort((a, b) => {
+					const dateA = new Date(a.start_date || a.purchase_date);
+					const dateB = new Date(b.start_date || b.purchase_date);
+					return dateB - dateA;
+				});
+				
+				renewalsCount = membershipHistory.filter(m => m.membership_type === 'Renewal').length;
+				totalAmountPaid = membershipHistory.reduce((sum, m) => sum + (m.amount_paid || 0), 0);
 			} else {
 				membershipHistory = [];
 				renewalsCount = 0;

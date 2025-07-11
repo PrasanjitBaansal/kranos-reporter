@@ -110,8 +110,8 @@ export function validateUsername(username) {
         errors.push('Username must be less than 30 characters');
     }
     
-    if (!/^[a-zA-Z0-9_.-]+$/.test(username)) {
-        errors.push('Username can only contain letters, numbers, dots, hyphens, and underscores');
+    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+        errors.push('Username can only contain letters, numbers, underscores, and hyphens');
     }
     
     if (/^[._-]|[._-]$/.test(username)) {
@@ -148,8 +148,8 @@ export function validateEmail(email) {
     
     email = email.trim().toLowerCase();
     
-    // Basic email regex
-    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    // Basic email regex (RFC-compliant but disallow dots at the end of local part)
+    const emailRegex = /^[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
     
     if (!emailRegex.test(email)) {
         errors.push('Please enter a valid email address');
@@ -207,6 +207,23 @@ export function generateSecurePassword(length = 16) {
     
     // Shuffle the password
     return password.split('').sort(() => Math.random() - 0.5).join('');
+}
+
+/**
+ * Check if password is compromised
+ */
+export function checkPasswordCompromise(password) {
+    if (!password) return { isCompromised: false };
+    
+    const commonPatterns = [
+        'password', '123456', 'qwerty', 'admin', 'letmein',
+        'welcome', 'monkey', 'dragon', 'football', 'baseball'
+    ];
+    
+    const lowerPassword = password.toLowerCase();
+    const isCompromised = commonPatterns.some(pattern => lowerPassword.includes(pattern));
+    
+    return { isCompromised };
 }
 
 /**
@@ -298,25 +315,6 @@ export function formatDisplayName(user) {
     return 'Unknown User';
 }
 
-/**
- * Check if password has been compromised (placeholder for future integration)
- */
-export async function checkPasswordCompromise(password) {
-    // In a real implementation, you might integrate with HaveIBeenPwned API
-    // For now, just check against some common passwords
-    const commonPasswords = [
-        'password', '123456', '123456789', 'qwerty', 'abc123',
-        'password123', '111111', '123123', 'admin', 'welcome',
-        'monkey', 'dragon', 'master', 'sunshine', 'princess'
-    ];
-    
-    return {
-        isCompromised: commonPasswords.includes(password.toLowerCase()),
-        message: commonPasswords.includes(password.toLowerCase()) 
-            ? 'This password is commonly used and not secure'
-            : null
-    };
-}
 
 /**
  * Generate two-factor authentication secret

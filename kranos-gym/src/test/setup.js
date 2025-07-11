@@ -63,6 +63,12 @@ global.alert = vi.fn();
 global.confirm = vi.fn(() => true);
 global.prompt = vi.fn();
 
+// Mock Modal component
+vi.mock('$lib/components/Modal.svelte', async () => {
+	const MockModal = await import('./mocks/Modal.svelte');
+	return { default: MockModal.default };
+});
+
 // Reset all mocks before each test but preserve fetch implementation
 beforeEach(() => {
 	vi.clearAllMocks();

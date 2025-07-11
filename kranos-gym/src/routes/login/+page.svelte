@@ -21,7 +21,7 @@
 		const errors = {};
 		
 		if (!data.get('username')?.trim()) {
-			errors.username = 'Username is required';
+			errors.username = 'Username or phone number is required';
 		}
 		
 		if (!data.get('password')?.trim()) {
@@ -41,7 +41,7 @@
 	
 	// Enhanced form submission
 	const submitLogin = () => {
-		return async ({ formData: data, result }) => {
+		return async ({ formData: data, result, update }) => {
 			// Client-side validation
 			const errors = validateForm(data);
 			if (Object.keys(errors).length > 0) {
@@ -53,21 +53,34 @@
 			formErrors = {};
 			
 			// Handle server response
-			if (result.type === 'success') {
-				if (result.data?.success === false) {
+			console.log('Login response:', result);
+			console.log('Response type:', result.type);
+			console.log('Response data:', result.data);
+			
+			if (result.type === 'success' && result.data) {
+				if (result.data.success === false) {
 					// Server validation/login failed
 					showError(result.data.error || 'Invalid username or password');
+					if (result.data.details) {
+						console.error('Login error details:', result.data.details);
+					}
 					if (result.data.errors) {
 						formErrors = result.data.errors;
 					}
-				} else {
+				} else if (result.data.success === true) {
 					// Login successful
 					showSuccess('Login successful! Welcome back.');
 					
-					// Redirect to dashboard or originally intended page
-					const redirectTo = $page.url.searchParams.get('redirect') || '/';
-					goto(redirectTo);
+					// Give a moment for the auth to propagate
+					setTimeout(() => {
+						// Redirect to dashboard or originally intended page
+						const redirectTo = $page.url.searchParams.get('redirect') || '/';
+						goto(redirectTo);
+					}, 100);
 				}
+			} else if (result.type === 'redirect') {
+				// Server is redirecting us - let it happen
+				console.log('Redirect response, not blocking');
 			} else {
 				showError('An error occurred during login. Please try again.');
 			}
@@ -109,7 +122,7 @@
 			<div class="form-group">
 				<label for="username" class="form-label">
 					<span class="label-icon">👤</span>
-					Username
+					Username / Phone
 				</label>
 				<input
 					type="text"
@@ -119,7 +132,7 @@
 					on:input={() => clearFieldError('username')}
 					class="form-control"
 					class:error={formErrors.username}
-					placeholder="Enter your username"
+					placeholder="Enter username or phone number"
 					autocomplete="username"
 					disabled={isLoading}
 					required

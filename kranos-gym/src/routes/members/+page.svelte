@@ -216,7 +216,11 @@
 					}
 				} else {
 					// Success - show success message, close modal and refresh data
-					showSuccess(isEditing ? 'Member updated successfully!' : 'Member created successfully!');
+					if (!isEditing) {
+						showSuccess('Member created successfully! User can login with phone number and password: member123');
+					} else {
+						showSuccess('Member updated successfully!');
+					}
 					closeModal();
 					await invalidateAll();
 				}

@@ -19,10 +19,10 @@ export async function GET({ url }) {
 		console.log(`API: Fetching upcoming renewals for next ${days} days`);
 		
 		// Ensure database connection before querying
-		await db.connect();
+		db.connect();
 
 		// Get upcoming renewals
-		const renewals = db.getUpcomingRenewals(days);
+		const renewals = db.getUpcomingRenewals(days) || [];
 
 		// Sanitize output data to prevent XSS
 		const sanitizedRenewals = renewals.map(renewal => ({
@@ -48,7 +48,7 @@ export async function GET({ url }) {
 		}, { status: 500 });
 	} finally {
 		try {
-			await db.close();
+			db.close();
 		} catch (closeError) {
 			console.error('API Error closing database:', closeError);
 		}

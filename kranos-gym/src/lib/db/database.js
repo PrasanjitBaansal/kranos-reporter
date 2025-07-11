@@ -6,7 +6,10 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const DB_PATH = path.join(__dirname, '../../../kranos.db');
+// In production, use the correct path relative to the project root
+const DB_PATH = process.env.NODE_ENV === 'production' 
+    ? path.resolve(process.cwd(), 'kranos.db')
+    : path.join(__dirname, '../../../kranos.db');
 
 // Context7-grounded: Connection pool for better performance
 class DatabasePool {
@@ -456,7 +459,7 @@ class KranosSQLite {
         const values = fields.map(field => userData[field]);
         const setClause = fields.map(field => `${field} = ?`).join(', ');
         
-        const stmt = this.prepare(`UPDATE users SET ${setClause}, updated_at = ? WHERE id = ?`);
+        const stmt = this.prepare(`UPDATE users SET ${setClause}, updated_date = ? WHERE id = ?`);
         values.push(new Date().toISOString(), id);
         const result = stmt.run(...values);
         return { changes: result.changes };

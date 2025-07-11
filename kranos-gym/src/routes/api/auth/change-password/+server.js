@@ -7,7 +7,15 @@ export async function POST({ request, locals, getClientAddress }) {
     }
     
     try {
-        const { currentPassword, newPassword } = await request.json();
+        let currentPassword, newPassword;
+        
+        try {
+            const data = await request.json();
+            currentPassword = data.currentPassword;
+            newPassword = data.newPassword;
+        } catch (jsonError) {
+            return json({ success: false, error: 'Current password and new password are required' }, { status: 400 });
+        }
         
         // Validation
         if (!currentPassword || !newPassword) {

@@ -294,7 +294,7 @@ describe('Authentication System Integration', () => {
                 user_id: user.id,
                 username: user.username,
                 event_type: 'login_success',
-                severity: 'info',
+                severity: 'low',
                 ip_address: '127.0.0.1',
                 user_agent: 'Test Browser',
                 details: { source: 'web_app', description: 'User successfully logged in' }

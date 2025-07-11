@@ -1,12 +1,14 @@
 import { redirect } from '@sveltejs/kit';
 import Database from '$lib/db/database.js';
-import { generateAccessToken, generateRefreshToken } from '$lib/security/jwt-utils.js';
+import { createAccessToken, createRefreshToken } from '$lib/security/jwt-utils.js';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ locals }) {
 	// If user is already authenticated, redirect to dashboard
 	if (locals.user) {
+		console.log('User already authenticated, redirecting to dashboard');
 		throw redirect(302, '/');
 	}
 	
@@ -55,8 +57,8 @@ export const actions = {
 			}
 			
 			// Check if account is locked
-			if (user.locked_until && new Date(user.locked_until) > new Date()) {
-				const lockTime = new Date(user.locked_until);
+			if (user.account_locked_until && new Date(user.account_locked_until) > new Date()) {
+				const lockTime = new Date(user.account_locked_until);
 				const timeRemaining = Math.ceil((lockTime - new Date()) / 60000); // minutes
 				
 				console.log(`Login attempt blocked: Account '${username}' is locked for ${timeRemaining} more minutes`);
@@ -71,7 +73,13 @@ export const actions = {
 			
 			if (!passwordValid) {
 				// Invalid password - increment failed attempts
-				db.recordFailedLogin(user.id, getClientAddress());
+				const newAttempts = (user.failed_login_attempts || 0) + 1;
+				const lockUntil = newAttempts >= 5 ? new Date(Date.now() + 15 * 60 * 1000).toISOString() : null;
+				
+				db.updateUser(user.id, {
+					failed_login_attempts: newAttempts,
+					account_locked_until: lockUntil
+				});
 				
 				console.log(`Login attempt failed: Invalid password for user '${username}'`);
 				return {
@@ -81,36 +89,46 @@ export const actions = {
 			}
 			
 			// Password is valid - clear failed attempts and proceed with login
-			db.clearFailedLoginAttempts(user.id);
+			db.updateUser(user.id, {
+				failed_login_attempts: 0,
+				account_locked_until: null,
+				last_login: new Date().toISOString()
+			});
 			
 			// Generate JWT tokens
-			const accessToken = generateAccessToken({
-				userId: user.id,
-				username: user.username,
-				role: user.role
-			});
-			
-			const refreshToken = generateRefreshToken({
-				userId: user.id,
-				username: user.username
-			});
+			console.log('Creating tokens for user:', { id: user.id, username: user.username, role: user.role });
+			const sessionId = crypto.randomBytes(32).toString('hex');
+			const { token: accessToken } = createAccessToken(user, sessionId);
+			const { token: refreshToken } = createRefreshToken(user, sessionId);
 			
 			// Create session in database
 			const sessionData = {
 				user_id: user.id,
+				session_token: sessionId,
 				refresh_token: refreshToken,
-				device_info: request.headers.get('user-agent') || 'Unknown Device',
+				device_info: JSON.stringify({
+					userAgent: request.headers.get('user-agent') || 'Unknown Device',
+					ipAddress: getClientAddress()
+				}),
 				ip_address: getClientAddress(),
+				user_agent: request.headers.get('user-agent') || 'Unknown Device',
 				expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
 			};
 			
-			const session = db.createUserSession(sessionData);
+			const session = db.createSession(sessionData);
 			
 			// Log successful login
-			db.logUserActivity(user.id, 'login', {
+			db.logActivity({
+				user_id: user.id,
+				username: user.username,
+				action: 'login',
+				resource_type: 'session',
+				resource_id: session.id,
 				ip_address: getClientAddress(),
-				device_info: sessionData.device_info,
-				session_id: session.id
+				user_agent: request.headers.get('user-agent') || 'Unknown Device',
+				details: {
+					session_id: session.id
+				}
 			});
 			
 			// Set secure HTTP-only cookies
@@ -154,9 +172,12 @@ export const actions = {
 			
 		} catch (error) {
 			console.error('Login error:', error);
+			console.error('Error stack:', error.stack);
+			console.error('Error type:', error.constructor.name);
 			return {
 				success: false,
-				error: 'An error occurred during login. Please try again.'
+				error: 'An error occurred during login. Please try again.',
+				details: error.message // Add error details for debugging
 			};
 		} finally {
 			db.close();
