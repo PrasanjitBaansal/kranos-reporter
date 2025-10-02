@@ -297,7 +297,7 @@ export function migrateFromExcel(excelPath = 'static/data/Kranos MMA Members.xls
         `);
         
         const insertGCMembership = db.prepare(`
-            INSERT INTO group_class_memberships 
+            INSERT OR IGNORE INTO group_class_memberships
             (member_id, plan_id, start_date, end_date, amount_paid, purchase_date, membership_type, status)
             VALUES (?, ?, ?, ?, ?, ?, ?, 'Active')
         `);

@@ -86,9 +86,9 @@ kranos-gym/
 
 ### Default Users
 
-- **pjb** (admin) - Main admin account
-- **niranjan** (trainer) - Trainer account
-- Various members generated from Excel import
+- **pjb** (admin) - Password: admin123, Email: baansalprasanjit@gmail.com
+- **niranjan** (trainer) - Password: trainer123, Email: niranjan@kranosgym.com
+- **74 member accounts** - Default password: member123 (usernames generated from names)
 
 ### Database Migration
 
@@ -96,10 +96,14 @@ The database is initialized from [static/data/Kranos MMA Members.xlsx](kranos-gy
 
 Run manually:
 ```bash
+# Step 1: Run migration (creates tables, imports members/memberships)
 node src/lib/db/migrate.js
+
+# Step 2: Create user accounts (admin, trainer, members)
+node setup-user-accounts.js
 ```
 
-Auto-runs on first start via [scripts/start.js](kranos-gym/scripts/start.js).
+**Important:** Migration script performs a clean slate operation (deletes existing database). User accounts must be created separately using the setup script.
 
 ## Authentication & Authorization
 
@@ -132,14 +136,33 @@ See [src/lib/security/jwt-utils.js](kranos-gym/src/lib/security/jwt-utils.js)
 ### ✅ Working
 
 - Development server running on port 5173
-- Database populated with 73 members, 98 GC memberships, 6 PT memberships
-- Authentication system functional
+- Database populated with **74 members**, **91 GC memberships**, **16 PT memberships**, **11 group plans**
+- Authentication system functional with complete user tables
+- User accounts created: **pjb/admin123** (admin), **niranjan/trainer123** (trainer), 74 member accounts (member123)
 - Login page loads correctly
 - Toast notifications system
 - Dark theme with neon orange accent
 - Role-based navigation
+- Complete database schema with auth tables (users, user_sessions, user_activity_log)
 
-### ⚠️ Issues
+### ✅ Recent Fixes (Oct 2, 2025)
+
+1. **Database Schema Completed**
+   - Added auth tables (users, user_sessions, user_activity_log) to schema.sql
+   - Migration now creates complete database structure
+   - Fixed duplicate membership handling with `INSERT OR IGNORE`
+
+2. **Clean Database Migration**
+   - Re-ran migration with clean data from Excel
+   - All user accounts created successfully
+   - Verified pjb/admin123 credentials work correctly
+
+3. **Git Cleanup**
+   - Removed all .md documentation files from kranos-gym/
+   - Added consolidated CLAUDE.md at project root
+   - Committed and pushed all changes
+
+### ⚠️ Known Issues
 
 #### Critical: Test Failures (93/111 failing)
 
@@ -158,11 +181,7 @@ See [src/lib/security/jwt-utils.js](kranos-gym/src/lib/security/jwt-utils.js)
 3. **Text Expectations Wrong**
    - H1 shows "Kranos Gym" not "Login" or "Kranos Gym Management"
 
-4. **Password Unknown**
-   - Tests use `'admin123'` but actual password for `pjb` is unknown
-   - Password hash exists in DB: `$2b$12$xEc.cvx429P2EwxrbWPyEeMnqjQ7fivkbE0AMutJlKTKFHJpxh/V6`
-
-5. **URL Query Parameters**
+4. **URL Query Parameters**
    - SvelteKit form action `?/login` appends to URL
    - Tests fail URL assertions like `expect(page).toHaveURL('/login')`
 
@@ -387,24 +406,36 @@ export const actions = {
 - **Glassmorphism** effects
 - **Gradient cards** and backgrounds
 
-## Git Status
+## Session Summary (Oct 2, 2025)
 
-Uncommitted changes:
-- Deleted various documentation files
-- Modified database files (kranos.db-shm, kranos.db-wal)
-- Untracked: "Members Backup/", missing_memberships.sql
+### Completed Tasks
+1. ✅ Removed all .md documentation files from project
+2. ✅ Created consolidated CLAUDE.md at project root
+3. ✅ Fixed schema.sql to include auth tables (users, user_sessions, user_activity_log)
+4. ✅ Fixed migration script duplicate handling with INSERT OR IGNORE
+5. ✅ Performed clean database migration from Excel
+6. ✅ Created all user accounts (1 admin, 1 trainer, 74 members)
+7. ✅ Verified pjb/admin123 credentials work
+8. ✅ Committed and pushed all changes to git
 
-Recent commits:
-- Complete test improvements and Docker containerization
-- Revert to single-gym architecture
-- Implement members portal with RBAC
-- Implement payments management
+### Database State
+- **74 members** (from Excel import)
+- **91 GC memberships** (1 duplicate auto-skipped)
+- **16 PT memberships**
+- **11 group plans**
+- **76 user accounts** (pjb, niranjan, 74 members)
 
-Current branch: **main**
+### Next Steps
+- Fix failing tests (93/111 failing)
+  - Priority 1: Fix login redirect
+  - Priority 2: Update test selectors
+  - Priority 3: Fix URL assertions
+  - Priority 4: Run tests incrementally
 
 ---
 
 **Last Updated:** October 2, 2025
 **Project Path:** `/Users/prasanjit/Desktop/kranos-reporter/kranos-gym`
 **Dev Server:** http://localhost:5173
-**Status:** Tests need fixing (93/111 failing)
+**Current Branch:** main
+**Status:** Database clean ✅ | Tests need fixing ⚠️

@@ -50,3 +50,84 @@ CREATE TABLE app_settings (
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ============================================================================
+-- USERS TABLE - Core authentication table
+-- ============================================================================
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    salt TEXT NOT NULL,
+    role TEXT NOT NULL CHECK (role IN ('admin', 'trainer', 'member')),
+    full_name TEXT NOT NULL,
+    profile_image TEXT,
+
+    -- Account status and security
+    is_active BOOLEAN DEFAULT TRUE,
+    is_verified BOOLEAN DEFAULT FALSE,
+    must_change_password BOOLEAN DEFAULT FALSE,
+    failed_login_attempts INTEGER DEFAULT 0,
+    account_locked_until TEXT,
+
+    -- Timestamps
+    created_date TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_date TEXT DEFAULT CURRENT_TIMESTAMP,
+    last_login TEXT,
+    last_password_change TEXT DEFAULT CURRENT_TIMESTAMP,
+
+    -- Optional link to existing members table
+    member_id INTEGER,
+
+    -- Two-factor authentication (future)
+    two_factor_enabled BOOLEAN DEFAULT FALSE,
+    two_factor_secret TEXT,
+
+    FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE SET NULL
+);
+
+-- ============================================================================
+-- USER_SESSIONS TABLE - JWT session management
+-- ============================================================================
+CREATE TABLE user_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    session_token TEXT UNIQUE NOT NULL,
+    refresh_token TEXT UNIQUE NOT NULL,
+
+    -- Session metadata
+    device_info TEXT,
+    ip_address TEXT,
+    user_agent TEXT,
+
+    -- Timestamps
+    created_date TEXT DEFAULT CURRENT_TIMESTAMP,
+    expires_at TEXT NOT NULL,
+    last_activity TEXT DEFAULT CURRENT_TIMESTAMP,
+
+    -- Session status
+    is_active BOOLEAN DEFAULT TRUE,
+    revoked_at TEXT,
+    revoked_reason TEXT,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- ============================================================================
+-- USER_ACTIVITY_LOG TABLE - Track user actions
+-- ============================================================================
+CREATE TABLE user_activity_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    username TEXT,
+    action TEXT NOT NULL,
+    resource_type TEXT,
+    resource_id TEXT,
+    ip_address TEXT,
+    user_agent TEXT,
+    details TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
