@@ -158,19 +158,18 @@ export const actions = {
 			});
 			
 			console.log(`Login successful: User '${username}' (ID: ${user.id}) logged in from ${getClientAddress()}`);
-			
-			return {
-				success: true,
-				user: {
-					id: user.id,
-					username: user.username,
-					email: user.email,
-					role: user.role,
-					created_at: user.created_at
-				}
-			};
+
+			// Redirect to dashboard or originally requested page
+			// This ensures cookies are set before the redirect happens
+			throw redirect(302, '/');
 			
 		} catch (error) {
+			// Check if this is a redirect (which is thrown intentionally)
+			if (error?.status === 302) {
+				db.close();
+				throw error; // Re-throw redirect
+			}
+
 			console.error('Login error:', error);
 			console.error('Error stack:', error.stack);
 			console.error('Error type:', error.constructor.name);

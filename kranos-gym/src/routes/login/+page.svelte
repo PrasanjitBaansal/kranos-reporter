@@ -57,30 +57,20 @@
 			console.log('Response type:', result.type);
 			console.log('Response data:', result.data);
 			
-			if (result.type === 'success' && result.data) {
-				if (result.data.success === false) {
-					// Server validation/login failed
-					showError(result.data.error || 'Invalid username or password');
-					if (result.data.details) {
-						console.error('Login error details:', result.data.details);
-					}
-					if (result.data.errors) {
-						formErrors = result.data.errors;
-					}
-				} else if (result.data.success === true) {
-					// Login successful
-					showSuccess('Login successful! Welcome back.');
-					
-					// Give a moment for the auth to propagate
-					setTimeout(() => {
-						// Redirect to dashboard or originally intended page
-						const redirectTo = $page.url.searchParams.get('redirect') || '/';
-						goto(redirectTo);
-					}, 100);
+			if (result.type === 'redirect') {
+				// Server is redirecting us after successful login
+				// Cookies are already set, just let the redirect happen
+				console.log('Login successful, redirecting...');
+				await update();
+			} else if (result.type === 'success' && result.data) {
+				// This is an error response (server returns data for errors)
+				showError(result.data.error || 'Invalid username or password');
+				if (result.data.details) {
+					console.error('Login error details:', result.data.details);
 				}
-			} else if (result.type === 'redirect') {
-				// Server is redirecting us - let it happen
-				console.log('Redirect response, not blocking');
+				if (result.data.errors) {
+					formErrors = result.data.errors;
+				}
 			} else {
 				showError('An error occurred during login. Please try again.');
 			}
